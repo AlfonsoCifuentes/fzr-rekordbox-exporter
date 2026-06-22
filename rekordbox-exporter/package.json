@@ -10,7 +10,7 @@
     "preview": "electron-vite preview",
     "electron:dev": "electron-vite dev",
     "package": "electron-builder",
-    "dist": "electron-vite build && electron-builder",
+    "dist": "electron-vite build && electron-builder --publish never",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -85,13 +85,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "FZR Rekordbox Exporter"
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "AlfonsoCifuentes",
-        "repo": "fzr-rekordbox-exporter"
-      }
-    ]
+    }
   }
 }
