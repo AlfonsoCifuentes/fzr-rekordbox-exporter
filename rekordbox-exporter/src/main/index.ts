@@ -3,7 +3,37 @@ import { join } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { parseRekordboxFile } from '../core/rekordbox/parseRekordboxFile'
 import { exportPlaylist } from '../core/traktor/exportTraktor'
+import { performSpotifyLogin } from '../core/spotify/spotifyAuth'
+import { getCurrentUser, exportPlaylistToSpotify } from '../core/spotify/spotifyApi'
 import type { Playlist } from '../core/common/types'
+
+// ---- Spotify session state -----------------------------------------------
+
+let spotifyToken: string | null = null
+
+function getSpotifyConfigPath(): string {
+  return join(app.getPath('userData'), 'spotify-config.json')
+}
+
+function loadSpotifyClientId(): string {
+  try {
+    const raw = readFileSync(getSpotifyConfigPath(), 'utf-8')
+    const parsed = JSON.parse(raw) as { clientId?: string }
+    return parsed.clientId ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function saveSpotifyClientId(clientId: string): void {
+  try {
+    writeFileSync(getSpotifyConfigPath(), JSON.stringify({ clientId }), 'utf-8')
+  } catch {
+    // non-critical — ignore
+  }
+}
+
+// ---- Window ----------------------------------------------------------------
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -79,13 +109,18 @@ ipcMain.handle('dialog:openOutputDir', async () => {
   return filePaths[0]
 })
 
-/** Export playlists to M3U8/NML/reports */
+/** Export playlists to M3U8/NML/reports/Spotify-txt */
 ipcMain.handle(
   'export:playlists',
   async (
     _event,
     playlists: Playlist[],
-    options: { outputDir: string; exportM3U8: boolean; exportNml: boolean }
+    options: {
+      outputDir: string
+      exportM3U8: boolean
+      exportNml: boolean
+      exportSpotifyTxt: boolean
+    }
   ) => {
     const results = []
 
@@ -98,8 +133,9 @@ ipcMain.handle(
       }
 
       const output = exportPlaylist(playlist, {
-        ...options,
-        outputDir: playlistDir
+        outputDir: playlistDir,
+        exportM3U8: options.exportM3U8,
+        exportNml: options.exportNml
       })
 
       if (output.m3u8Content) {
@@ -111,12 +147,21 @@ ipcMain.handle(
       writeFileSync(join(playlistDir, `${safePlaylistName}_report.json`), output.reportJson, 'utf-8')
       writeFileSync(join(playlistDir, `${safePlaylistName}_report.csv`), output.reportCsv, 'utf-8')
 
+      let spotifyTxtPath: string | undefined
+      if (options.exportSpotifyTxt) {
+        const lines = playlist.tracks.map((t) => `${t.artist} - ${t.name}`)
+        const txtContent = lines.join('\r\n')
+        spotifyTxtPath = join(playlistDir, `${safePlaylistName}_spotify.txt`)
+        writeFileSync(spotifyTxtPath, txtContent, 'utf-8')
+      }
+
       results.push({
         ...output.result,
         nmlPath: output.nmlContent ? join(playlistDir, `${safePlaylistName}.nml`) : undefined,
         m3uPath: output.m3u8Content ? join(playlistDir, `${safePlaylistName}.m3u8`) : undefined,
         reportJsonPath: join(playlistDir, `${safePlaylistName}_report.json`),
-        reportCsvPath: join(playlistDir, `${safePlaylistName}_report.csv`)
+        reportCsvPath: join(playlistDir, `${safePlaylistName}_report.csv`),
+        spotifyTxtPath
       })
     }
 
@@ -129,3 +174,53 @@ ipcMain.handle('shell:openFolder', async (_event, folderPath: string) => {
   const { shell } = await import('electron')
   await shell.openPath(folderPath)
 })
+
+// ---- Spotify IPC Handlers ------------------------------------------------
+
+/** Get stored client_id */
+ipcMain.handle('spotify:getClientId', () => loadSpotifyClientId())
+
+/** Save client_id and persist */
+ipcMain.handle('spotify:setClientId', (_event, clientId: string) => {
+  saveSpotifyClientId(clientId)
+})
+
+/** Get current session status */
+ipcMain.handle('spotify:getStatus', async () => {
+  if (!spotifyToken) return { loggedIn: false, displayName: null }
+  try {
+    const user = await getCurrentUser(spotifyToken)
+    return { loggedIn: true, displayName: user.display_name || user.id }
+  } catch {
+    spotifyToken = null
+    return { loggedIn: false, displayName: null }
+  }
+})
+
+/** Start OAuth PKCE login — opens browser, captures callback */
+ipcMain.handle('spotify:login', async (_event, clientId: string) => {
+  saveSpotifyClientId(clientId)
+  spotifyToken = await performSpotifyLogin(clientId)
+  const user = await getCurrentUser(spotifyToken)
+  return { success: true, displayName: user.display_name || user.id }
+})
+
+/** Log out */
+ipcMain.handle('spotify:logout', () => {
+  spotifyToken = null
+})
+
+/** Export a single playlist to Spotify with progress events */
+ipcMain.handle(
+  'spotify:exportPlaylist',
+  async (event, playlist: Playlist) => {
+    if (!spotifyToken) throw new Error('No estás conectado a Spotify')
+
+    const result = await exportPlaylistToSpotify(playlist, spotifyToken, (progress) => {
+      event.sender.send('spotify:progress', { playlistName: playlist.name, ...progress })
+    })
+
+    return result
+  }
+)
+

@@ -1,6 +1,6 @@
 {
   "name": "rekordbox-exporter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Export Rekordbox playlists to Spotify and Traktor",
   "productName": "FZR Rekordbox Exporter",
   "main": "out/main/index.js",

@@ -50,7 +50,7 @@ export default function HeroSection() {
             style={{ background: "var(--spotify-green)" }}
           />
           <span style={{ color: "var(--text-muted)" }}>
-            Free &amp; Open Source · Windows 10/11 · v1.0.0
+            Free &amp; Open Source · Windows 10/11 · v1.1.0
           </span>
         </div>
 

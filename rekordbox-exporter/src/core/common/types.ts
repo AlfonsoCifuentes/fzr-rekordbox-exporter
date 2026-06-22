@@ -63,6 +63,9 @@ export type ExportResult = {
   ambiguousTracks: number
   notFoundTracks: number
   spotifyPlaylistUrl?: string
+  spotifyMatched?: number
+  spotifyNotFound?: number
+  spotifyTxtPath?: string
   nmlPath?: string
   m3uPath?: string
   reportJsonPath?: string

@@ -27,9 +27,11 @@ npm run dev
 ## Cómo importar en Traktor
 
 ### M3U8
+
 En Traktor: **File → Import → Import Playlist...** → selecciona el `.m3u8`
 
 ### NML
+
 En Traktor: **File → Import → Import Playlist...** → selecciona el `.nml`
 
 > ⚠️ La exportación NML es experimental. Si algo falla, usa el M3U8 como fallback.

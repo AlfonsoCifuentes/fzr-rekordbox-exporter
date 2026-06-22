@@ -83,6 +83,41 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
                     <span className={styles.filePath}>{result.reportCsvPath}</span>
                   </div>
                 )}
+                {result.spotifyTxtPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954', borderColor: '#1db95440' }}>TXT</span>
+                    <span className={styles.filePath}>{result.spotifyTxtPath}</span>
+                    <button
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 8px' }}
+                      onClick={() => openFolder(result.spotifyTxtPath)}
+                    >
+                      Abrir carpeta
+                    </button>
+                  </div>
+                )}
+                {result.spotifyPlaylistUrl && (
+                  <div className={styles.fileRow} style={{ background: '#1db95410', borderColor: '#1db95440', borderRadius: 6, padding: '10px 14px' }}>
+                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954', borderColor: '#1db95440' }}>Spotify</span>
+                    <span style={{ flex: 1, fontSize: 12, color: '#aaa' }}>
+                      {result.spotifyMatched ?? 0} canciones añadidas
+                      {(result.spotifyNotFound ?? 0) > 0 && ` · ${result.spotifyNotFound} no encontradas`}
+                    </span>
+                    <a
+                      href={result.spotifyPlaylistUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 10px', color: '#1db954', textDecoration: 'none' }}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        window.open(result.spotifyPlaylistUrl, '_blank')
+                      }}
+                    >
+                      Abrir en Spotify →
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -91,6 +126,16 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
         <div className={styles.hint}>
           <strong>Importar en Traktor:</strong> En Traktor, ve a{' '}
           <em>File → Import → Import Playlist...</em> y selecciona el archivo .nml o .m3u8.
+          {' '}
+          <strong>Para Spotify con el .txt:</strong> Ve a{' '}
+          <a href="https://soundiiz.com" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}
+            onClick={(e) => { e.preventDefault(); window.open('https://soundiiz.com', '_blank') }}>
+            Soundiiz
+          </a>{' '}o{' '}
+          <a href="https://www.tunemymusic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}
+            onClick={(e) => { e.preventDefault(); window.open('https://www.tunemymusic.com', '_blank') }}>
+            TuneMyMusic
+          </a>{' '}e importa el archivo .txt.
         </div>
       </div>
     </div>

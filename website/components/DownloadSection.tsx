@@ -2,7 +2,7 @@
 
 const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
 const RELEASES_URL = `${GITHUB_REPO}/releases/latest`;
-const EXE_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.0.0-x64.exe`;
+const EXE_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.1.0-x64.exe`;
 
 const requirements = [
   "Windows 10 / 11 (64-bit)",
@@ -70,7 +70,7 @@ export default function DownloadSection() {
                 FZR Rekordbox Exporter
               </h3>
               <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                Version 1.0.0 · Windows x64 · Installer ~180 MB
+                Version 1.1.0 · Windows x64 · Installer ~180 MB
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
