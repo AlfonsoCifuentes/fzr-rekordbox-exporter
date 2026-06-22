@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 
-const GITHUB_REPO = "https://github.com/fzr-dev/fzr-rekordbox-exporter";
+const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
 const RELEASES_URL = `${GITHUB_REPO}/releases/latest`;
 
 export default function HeroSection() {

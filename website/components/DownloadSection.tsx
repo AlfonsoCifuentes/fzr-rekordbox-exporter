@@ -1,6 +1,6 @@
 "use client";
 
-const GITHUB_REPO = "https://github.com/fzr-dev/fzr-rekordbox-exporter";
+const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
 const RELEASES_URL = `${GITHUB_REPO}/releases/latest`;
 const ZIP_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.0.0-x64.zip`;
 
