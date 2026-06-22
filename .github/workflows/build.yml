@@ -33,8 +33,6 @@ jobs:
       - name: Build and package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WIN_CSC_LINK: ""
-          CSC_LINK: ""
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run dist
 

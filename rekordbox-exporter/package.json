@@ -22,26 +22,26 @@
     "url": "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter.git"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
+    "jsdom": "^24.1.0",
     "typescript": "^5.5.2",
     "vite": "^5.3.1",
-    "vitest": "^1.6.0",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/jest-dom": "^6.4.6",
-    "jsdom": "^24.1.0"
+    "vitest": "^1.6.0"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "@types/better-sqlite3": "^7.6.11",
+    "better-sqlite3": "^11.0.0",
     "fast-xml-parser": "^4.4.0",
     "fuse.js": "^7.0.0",
-    "better-sqlite3": "^11.0.0",
-    "@types/better-sqlite3": "^7.6.11"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "build": {
     "appId": "com.fzr.rekordbox-exporter",
@@ -65,11 +65,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "FZR-Rekordbox-Exporter-${version}-${arch}.${ext}"
