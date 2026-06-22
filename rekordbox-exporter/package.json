@@ -72,8 +72,7 @@
           "arch": ["x64"]
         }
       ],
-      "artifactName": "FZR-Rekordbox-Exporter-${version}-${arch}.${ext}",
-      "sign": false
+      "artifactName": "FZR-Rekordbox-Exporter-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
