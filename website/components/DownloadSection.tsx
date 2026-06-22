@@ -2,13 +2,13 @@
 
 const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
 const RELEASES_URL = `${GITHUB_REPO}/releases/latest`;
-const ZIP_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.0.0-x64.zip`;
+const EXE_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.0.0-x64.exe`;
 
 const requirements = [
   "Windows 10 / 11 (64-bit)",
   "4 GB RAM (8 GB recommended)",
   "200 MB free disk space",
-  "No installation needed (portable ZIP)",
+  "Simple installer wizard (.exe)",
 ];
 
 export default function DownloadSection() {
@@ -39,7 +39,7 @@ export default function DownloadSection() {
             Get FZR Rekordbox Exporter
           </h2>
           <p className="text-base max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
-            Free, open source, no registration. Just download, unzip and run.
+            Free, open source, no registration. Just download and install in seconds.
           </p>
         </div>
 
@@ -70,17 +70,17 @@ export default function DownloadSection() {
                 FZR Rekordbox Exporter
               </h3>
               <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                Version 1.0.0 · Windows x64 · ~120 MB
+                Version 1.0.0 · Windows x64 · Installer ~180 MB
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                 <a
-                  href={ZIP_URL}
+                  href={EXE_URL}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95 animate-pulse-glow"
                   style={{ background: "var(--spotify-green)", color: "#000" }}
                 >
                   <DownloadIcon />
-                  Download ZIP (Portable)
+                  Download Installer (.exe)
                 </a>
                 <a
                   href={RELEASES_URL}
@@ -128,10 +128,10 @@ export default function DownloadSection() {
             </h4>
             <ol className="flex flex-col gap-2">
               {[
-                "Download the ZIP file",
-                "Extract to any folder",
-                "Run FZR Rekordbox Exporter.exe",
-                "No admin rights required",
+                "Download the .exe installer",
+                "Run it and follow the wizard",
+                "Choose install folder (optional)",
+                "Launch from desktop shortcut",
               ].map((step, i) => (
                 <li key={step} className="flex items-start gap-3 text-sm">
                   <span
