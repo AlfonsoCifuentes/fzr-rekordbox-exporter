@@ -15,8 +15,12 @@
     "test:watch": "vitest"
   },
   "keywords": [],
-  "author": "",
+  "author": "AlfonsoCifuentes",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter.git"
+  },
   "devDependencies": {
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -75,11 +79,16 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true,
-      "installerIcon": "build-resources/icon.ico",
-      "uninstallerIcon": "build-resources/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "FZR Rekordbox Exporter"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "AlfonsoCifuentes",
+        "repo": "fzr-rekordbox-exporter"
+      }
+    ]
   }
 }
