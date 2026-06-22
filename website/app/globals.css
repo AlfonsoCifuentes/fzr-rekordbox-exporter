@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* FZR Design Tokens */
+:root {
+  --bg-base:        #0a0b0e;
+  --bg-elevated:    #111318;
+  --bg-card:        #161921;
+  --bg-card-hover:  #1c2029;
+  --rekordbox-blue: #005bff;
+  --traktor-white:  #e8eaf0;
+  --spotify-green:  #1db954;
+  --text-primary:   #f0f2f8;
+  --text-muted:     #7e8599;
+  --text-subtle:    #4a5168;
+  --glow-blue:      rgba(0, 91, 255, 0.35);
+  --glow-green:     rgba(29, 185, 84, 0.35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--text-subtle); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px var(--glow-green); }
+  50%       { box-shadow: 0 0 45px var(--glow-green), 0 0 90px var(--glow-green); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+.animate-fade-up  { animation: fadeUp 0.7s ease forwards; }
+.animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+.animate-float    { animation: float 4s ease-in-out infinite; }
+
+.glass {
+  background: rgba(22, 25, 33, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.gradient-text {
+  background: linear-gradient(90deg, var(--rekordbox-blue) 0%, var(--traktor-white) 50%, var(--spotify-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}

@@ -1,0 +1,14 @@
+#EXTM3U
+#PLAYLIST:My Techno Set
+
+#EXTINF:360,Artist A - Track One
+C:\Music\Artist A\Track One.mp3
+
+#EXTINF:420,Artist B feat. Artist C - Track Two (Extended Mix)
+C:\Music\Various\Track Two.mp3
+
+#EXTINF:300,Unknown Artist Track
+C:\Music\Unknown\Track Three.flac
+
+#EXTINF:-1,Artist D - Track Without Duration
+file:///C:/Music/Artist%20D/Track%20Without%20Duration.mp3

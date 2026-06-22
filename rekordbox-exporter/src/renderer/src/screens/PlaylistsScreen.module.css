@@ -1,0 +1,106 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.header h2 { font-size: 16px; font-weight: 600; }
+
+.headerInfo {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.toolbar {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 360px;
+}
+
+.tableWrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg3);
+  padding: 10px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.row, .rowSelected {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.row:hover { background: var(--bg2); }
+.rowSelected { background: #1e1410; }
+.rowSelected:hover { background: #261a14; }
+
+.row td, .rowSelected td {
+  padding: 10px 16px;
+  vertical-align: middle;
+}
+
+.playlistName {
+  font-weight: 500;
+}
+
+.folderPath {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.trackCount {
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  justify-content: flex-end;
+}

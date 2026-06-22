@@ -1,0 +1,125 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 40px;
+  padding: 40px;
+  background: var(--bg);
+}
+
+.logo {
+  text-align: center;
+}
+
+.logoIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 640px;
+  width: 100%;
+}
+
+.feature {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.feature strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.feature p {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.featureIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.hint em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.formats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.formatsLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.formatBadge {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.hints {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+.hints strong {
+  color: var(--text);
+}
+
+.hints em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 500;
+}

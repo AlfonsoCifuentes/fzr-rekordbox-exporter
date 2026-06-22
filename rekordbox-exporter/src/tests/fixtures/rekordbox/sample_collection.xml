@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DJ_PLAYLISTS Version="1.0.0">
+  <PRODUCT Name="rekordbox" Version="6.0.0" Company="AlphaTheta"/>
+  <COLLECTION Entries="4">
+    <TRACK TrackID="1" Name="Test Track One" Artist="Artist A" Album="Album X" Genre="Techno"
+      TotalTime="360" AverageBpm="130.000" Year="2020" Bitrate="320" SampleRate="44100"
+      Location="file:///C:/Music/Artist%20A/Test%20Track%20One.mp3" Tonality="1A" Rating="5"/>
+    <TRACK TrackID="2" Name="Test Track Two" Artist="Artist B &amp; Artist C" Album="Album Y" Genre="House"
+      TotalTime="420" AverageBpm="125.000" Year="2021"
+      Location="file:///C:/Music/Artist%20B/Test%20Track%20Two.mp3"/>
+    <TRACK TrackID="3" Name="Track With Remix" Artist="Artist D" Remixer="Remixer X" Genre="Techno"
+      TotalTime="480" AverageBpm="135.000"
+      Location="file:///C:/Music/Various/Track%20With%20Remix.mp3"/>
+    <TRACK TrackID="4" Name="Track Without Location" Artist="Artist E" TotalTime="300"/>
+  </COLLECTION>
+  <PLAYLISTS>
+    <NODE Name="ROOT" Type="0" Count="2">
+      <NODE Name="Techno Folder" Type="0" Count="1">
+        <NODE Name="My Techno Playlist" Type="1" Entries="2">
+          <TRACK Key="1"/>
+          <TRACK Key="3"/>
+        </NODE>
+      </NODE>
+      <NODE Name="My House Playlist" Type="1" Entries="2">
+        <TRACK Key="2"/>
+        <TRACK Key="99"/>
+      </NODE>
+    </NODE>
+  </PLAYLISTS>
+</DJ_PLAYLISTS>

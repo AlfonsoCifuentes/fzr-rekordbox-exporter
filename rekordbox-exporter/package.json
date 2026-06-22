@@ -1,0 +1,85 @@
+{
+  "name": "rekordbox-exporter",
+  "version": "1.0.0",
+  "description": "Export Rekordbox playlists to Spotify and Traktor",
+  "productName": "FZR Rekordbox Exporter",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "electron:dev": "electron-vite dev",
+    "package": "electron-builder",
+    "dist": "electron-vite build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.4.6",
+    "jsdom": "^24.1.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "fast-xml-parser": "^4.4.0",
+    "fuse.js": "^7.0.0",
+    "better-sqlite3": "^11.0.0",
+    "@types/better-sqlite3": "^7.6.11"
+  },
+  "build": {
+    "appId": "com.fzr.rekordbox-exporter",
+    "productName": "FZR Rekordbox Exporter",
+    "copyright": "Copyright © 2024 FZR",
+    "directories": {
+      "output": "release",
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "out/**/*",
+      "!out/**/*.map",
+      "node_modules/**/*",
+      "!node_modules/.cache",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "out/main/index.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "FZR-Rekordbox-Exporter-${version}-${arch}.${ext}",
+      "sign": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "installerIcon": "build-resources/icon.ico",
+      "uninstallerIcon": "build-resources/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FZR Rekordbox Exporter"
+    }
+  }
+}

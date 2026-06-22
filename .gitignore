@@ -1,0 +1,31 @@
+# Electron app
+rekordbox-exporter/node_modules/
+rekordbox-exporter/out/
+rekordbox-exporter/release/
+rekordbox-exporter/dist-electron/
+
+# Website
+website/node_modules/
+website/.next/
+website/out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Build artifacts
+*.map

@@ -1,0 +1,4 @@
+#	Track Title	Artist	Composer	Album	Grouping	Genre	Kind	Size	Total Time	Disc #	Track #	Year	Date Added	Bit Rate	Sample Rate	Comments	Play Count	Last Played	Rating	Location	Remixer	Tonality	Label	Original Artist	Mix Name	Color	BPM	Date Released	Track Type
+1	Test Track One	Artist A		Album X		Techno	MPEG audio file	8.3 MB	6:00	0	0	2020	2021-01-01	320kbps	44100 Hz		0		★★★★★	C:\\Music\\Artist A\\Test Track One.mp3		1A			Original Mix		130.000		track
+2	Test Track Two	Artist B & Artist C		Album Y		House	MPEG audio file	10.1 MB	7:00	0	0	2021	2021-06-15	320kbps	44100 Hz		0			C:\\Music\\Various\\Test Track Two.mp3		7B			Extended Mix		125.000		track
+3	Track Without Location	Artist D				Unknown						2022					0										120.000		track
