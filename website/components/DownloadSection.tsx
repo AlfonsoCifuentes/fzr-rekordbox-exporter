@@ -1,8 +1,8 @@
 "use client";
 
 const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
-const RELEASES_URL = `${GITHUB_REPO}/releases/latest`;
-const EXE_URL = `${GITHUB_REPO}/releases/latest/download/FZR-Rekordbox-Exporter-1.1.0-x64.exe`;
+const RELEASES_URL = `${GITHUB_REPO}/releases/tag/v1.1.0`;
+const EXE_URL = `${GITHUB_REPO}/releases/download/v1.1.0/FZR-Rekordbox-Exporter-1.1.0-x64.exe`;
 
 const requirements = [
   "Windows 10 / 11 (64-bit)",
