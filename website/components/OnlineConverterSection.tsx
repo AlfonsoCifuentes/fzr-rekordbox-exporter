@@ -184,28 +184,29 @@ export default function OnlineConverterSection() {
                   setData(structuredClone(DEMO_SET));
                   setActivePlIdx(0);
                 }}
-                className="px-5 py-2.5 rounded-full font-semibold text-sm glass hover:border-white/25 transition-transform hover:scale-105 cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm glass hover:border-white/25 transition-transform hover:scale-105 cursor-pointer"
                 style={{ color: "var(--text-primary)" }}
               >
-                ✨ {locale === "es" ? "Cargar set Techno de prueba" : "Load Demo Techno Set"}
+                <span className="w-2 h-2 rounded-full bg-[#1db954]" style={{ boxShadow: "0 0 8px #1db954" }} />
+                {locale === "es" ? "Cargar set Techno de prueba" : "Load Demo Techno Set"}
               </button>
             </div>
 
             {error && (
-              <p className="mt-5 text-xs text-red-400 font-medium">⚠️ {error}</p>
+              <p className="mt-5 text-xs text-red-400 font-medium font-mono">ERROR: {error}</p>
             )}
           </div>
         ) : (
-          <div className="glass rounded-3xl overflow-hidden max-w-5xl mx-auto">
+          <div className="deck-console rounded-3xl overflow-hidden max-w-5xl mx-auto">
             {/* Top bar */}
             <div
               className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b"
-              style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(10,11,14,0.6)" }}
+              style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(7,9,14,0.85)" }}
             >
               <div className="flex items-center gap-3 flex-wrap">
                 <span
-                  className="px-2.5 py-1 rounded-full text-xs font-bold"
-                  style={{ background: "rgba(0,91,255,0.18)", color: "#6ba4ff" }}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold"
+                  style={{ background: "rgba(0,149,255,0.16)", color: "#6cc2ff", border: "1px solid rgba(0,149,255,0.32)" }}
                 >
                   {data.format}
                 </span>
@@ -213,7 +214,7 @@ export default function OnlineConverterSection() {
                   <select
                     value={activePlIdx}
                     onChange={(e) => setActivePlIdx(Number(e.target.value))}
-                    className="rounded-lg px-3 py-1.5 text-sm font-semibold bg-[#161921] border border-white/10 text-white"
+                    className="rounded-lg px-3 py-1.5 text-sm font-semibold bg-[#121622] border border-white/15 text-white"
                   >
                     {data.playlists.map((p, i) => (
                       <option key={p.id} value={i}>
@@ -232,10 +233,11 @@ export default function OnlineConverterSection() {
                     <button
                       type="button"
                       onClick={() => updateActivePlaylist(sortWebPlaylistHarmonically(activePlaylist))}
-                      className="px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all hover:brightness-110"
-                      style={{ background: "rgba(29,185,84,0.18)", color: "#3ae374", border: "1px solid rgba(29,185,84,0.35)" }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all hover:brightness-110"
+                      style={{ background: "rgba(29,185,84,0.16)", color: "#46ee82", border: "1px solid rgba(29,185,84,0.35)" }}
                     >
-                      ✨ {locale === "es" ? "Auto-ordenar Camelot" : "Harmonic Auto-Sort"}
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1db954]" style={{ boxShadow: "0 0 6px #1db954" }} />
+                      {locale === "es" ? "Auto-ordenar Camelot" : "Harmonic Auto-Sort"}
                     </button>
                     <button
                       type="button"
@@ -248,9 +250,10 @@ export default function OnlineConverterSection() {
                             : `${res.cleaned} track(s) cleaned & keys normalized to Camelot.`
                         );
                       }}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-[#7ccdff] hover:border-white/25 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold glass text-[#7ccdff] hover:border-white/25 cursor-pointer"
                     >
-                      🧼 {locale === "es" ? "Limpiar tags" : "Clean Tags"}
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0095ff]" style={{ boxShadow: "0 0 6px #0095ff" }} />
+                      {locale === "es" ? "Limpiar tags" : "Clean Tags"}
                     </button>
                     <button
                       type="button"
@@ -263,9 +266,10 @@ export default function OnlineConverterSection() {
                             : `${res.fixed} track(s) fixed (half/double BPM).`
                         );
                       }}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-white/90 hover:border-white/25 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold glass text-[#ffab5e] hover:border-white/25 cursor-pointer"
                     >
-                      ⚡ BPM ×2/÷2
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ff7a1a]" style={{ boxShadow: "0 0 6px #ff7a1a" }} />
+                      BPM ×2/÷2
                     </button>
                     <button
                       type="button"
@@ -281,23 +285,23 @@ export default function OnlineConverterSection() {
                       }}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-white/90 hover:border-white/25 cursor-pointer"
                     >
-                      ✂️ {locale === "es" ? "Zonas BPM" : "Split BPM"}
+                      {locale === "es" ? "Zonas BPM" : "Split BPM"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowRemap((v) => !v)}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-white/90 hover:border-white/25 cursor-pointer"
                     >
-                      🔧 {locale === "es" ? "Rutas" : "Remap Paths"}
+                      {locale === "es" ? "Rutas" : "Remap Paths"}
                     </button>
                     {analytics && analytics.duplicateCount > 0 && (
                       <button
                         type="button"
                         onClick={() => updateActivePlaylist(deduplicateWebPlaylist(activePlaylist))}
                         className="px-3.5 py-1.5 rounded-full text-xs font-bold cursor-pointer"
-                        style={{ background: "rgba(245,166,35,0.18)", color: "#f5b942", border: "1px solid rgba(245,166,35,0.35)" }}
+                        style={{ background: "rgba(255,122,26,0.18)", color: "#ffab5e", border: "1px solid rgba(255,122,26,0.38)" }}
                       >
-                        🧹 {locale === "es" ? `Quitar ${analytics.duplicateCount} duplicado(s)` : `Remove ${analytics.duplicateCount} duplicate(s)`}
+                        {locale === "es" ? `Quitar ${analytics.duplicateCount} dup.` : `Remove ${analytics.duplicateCount} dup.`}
                       </button>
                     )}
                   </>

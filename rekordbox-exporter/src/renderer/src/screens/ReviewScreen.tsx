@@ -347,15 +347,31 @@ export default function ReviewScreen({
                       )}
                     </td>
                     <td>
-                      <span className={`tag ${badgeClass}`}>
-                        {isExcluded
-                          ? 'Omitido'
-                          : match.status === 'manual'
-                            ? 'Manual'
-                            : match.status === 'not_found'
-                              ? '0%'
-                              : `${match.confidence}%`}
-                      </span>
+                      <div className={styles.confidenceMeterWrap}>
+                        <span className={`tag ${badgeClass}`}>
+                          {isExcluded
+                            ? 'Omitido'
+                            : match.status === 'manual'
+                              ? 'Manual'
+                              : match.status === 'not_found'
+                                ? '0%'
+                                : `${match.confidence}%`}
+                        </span>
+                        <div className={styles.confidenceBarTrack}>
+                          <div
+                            className={styles.confidenceBarFill}
+                            style={{
+                              width: `${isExcluded || match.status === 'not_found' ? 0 : match.confidence}%`,
+                              background:
+                                isExcluded || match.status === 'not_found'
+                                  ? '#ef5350'
+                                  : match.status === 'ambiguous'
+                                    ? '#ff7a1a'
+                                    : '#1db954'
+                            }}
+                          />
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <div className={styles.actionBtns}>

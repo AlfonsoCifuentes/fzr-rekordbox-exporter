@@ -4,86 +4,96 @@ import { useLocale } from "./LocaleContext";
 const stepsEn = [
   {
     number: "01",
-    title: "Export from Rekordbox",
+    deckTag: "INPUT",
+    title: "Export from your DJ software",
     description:
-      "In Rekordbox go to File → Export Collection in rekordbox xml format, or right-click any playlist and export as M3U8 or TXT.",
-    accent: "var(--rekordbox-blue)",
-    detail: "XML · M3U8 · M3U · TXT (UTF-16)",
+      "Export a Rekordbox XML, Traktor NML, Serato .crate, VirtualDJ database.xml, M3U8, TXT, or CSV playlist — no cloud sync required.",
+    accent: "#0095ff",
+    detail: "XML · NML · .CRATE · VDJ · M3U8 · CSV",
   },
   {
     number: "02",
-    title: "Drag & drop into FZR Exporter",
+    deckTag: "INGEST",
+    title: "Drop straight into FZR Booth OS",
     description:
-      "Drop your file directly onto FZR Rekordbox Exporter. Format, encoding, folders, BPM, musical keys, and Hot Cues are parsed automatically.",
-    accent: "var(--traktor-white)",
-    detail: "Auto-detected format & encoding",
+      "Drag your file onto the desktop app or Online Web Deck. Encoding, folder trees, BPM, Open Key / Camelot, and Hot Cues parse instantly.",
+    accent: "#7fd3ff",
+    detail: "Auto-detected format & UTF-16/UTF-8",
   },
   {
     number: "03",
-    title: "Inspect & select playlists",
+    deckTag: "PREP",
+    title: "Analyze, clean & sort harmonically",
     description:
-      "Filter your playlist tree, preview tracks with BPM/Key/Cue counts, and spot missing local audio paths before exporting.",
-    accent: "var(--rekordbox-blue)",
-    detail: "Live track preview & disk check",
+      "Inspect the interactive Camelot Wheel and BPM curve, clean dirty download tags, fix half/double BPM, auto-sort harmonically, and repair broken audio paths.",
+    accent: "#ff7a1a",
+    detail: "Camelot Wheel · Tag Cleaner · Disk Relocator",
   },
   {
     number: "04",
-    title: "Review Spotify matches & choose formats",
+    deckTag: "BRIDGE",
+    title: "Review Spotify matches & pick outputs",
     description:
-      "Pick Traktor NML v19, M3U8 (absolute or relative), portable audio copy, or Spotify. Review ambiguous Spotify tracks manually before creation.",
-    accent: "var(--traktor-white)",
-    detail: "NML v19 · M3U8 · Spotify · CSV · JSON",
+      "Choose Traktor NML v19, Rekordbox XML, M3U8, HTML Booth Prep Sheet, CUE Sheet, or Spotify PKCE. Confirm ambiguous matches visually before export.",
+    accent: "#e8edf7",
+    detail: "NML v19 · RB XML · Spotify PKCE · HTML Prep",
   },
   {
     number: "05",
-    title: "Done — ready for the booth",
+    deckTag: "BOOTH",
+    title: "Ready to play live",
     description:
-      "Open the generated folder, import directly into Traktor Pro, or launch your new Spotify playlist with full unmatched track reports.",
-    accent: "var(--spotify-green)",
-    detail: "Zero friction results",
+      "Import your converted collection directly into Traktor Pro or Rekordbox, launch your synced Spotify playlist, or print your Booth Prep Sheet.",
+    accent: "#1db954",
+    detail: "100% local · Zero friction",
   },
 ];
 
 const stepsEs = [
   {
     number: "01",
-    title: "Exporta desde Rekordbox",
+    deckTag: "ENTRADA",
+    title: "Exporta desde tu software DJ",
     description:
-      "En Rekordbox ve a File → Export Collection in rekordbox xml format, o haz clic derecho en una playlist para exportar en M3U8 o TXT.",
-    accent: "var(--rekordbox-blue)",
-    detail: "XML · M3U8 · M3U · TXT (UTF-16)",
+      "Exporta tu XML de Rekordbox, NML de Traktor, .crate de Serato, database.xml de VirtualDJ, M3U8, TXT o CSV — sin subir archivos a la nube.",
+    accent: "#0095ff",
+    detail: "XML · NML · .CRATE · VDJ · M3U8 · CSV",
   },
   {
     number: "02",
-    title: "Arrastra y suelta en FZR Exporter",
+    deckTag: "LECTURA",
+    title: "Arrastra y suelta en FZR Booth OS",
     description:
-      "Suelta tu archivo directamente sobre la ventana. Detectamos formato, codificación, carpetas, BPM, tonalidad y Hot Cues automáticamente.",
-    accent: "var(--traktor-white)",
-    detail: "Detección automática",
+      "Suelta tu archivo en la app de escritorio o el Web Deck Online. Detectamos formato, carpetas, BPM, tonalidad Open Key / Camelot y Hot Cues al instante.",
+    accent: "#7fd3ff",
+    detail: "Detección automática · UTF-16 / UTF-8",
   },
   {
     number: "03",
-    title: "Previsualiza y elige playlists",
+    deckTag: "PREP",
+    title: "Analiza, limpia y ordena por Camelot",
     description:
-      "Filtra tus playlists por nombre o carpeta, inspecciona pistas con BPM/Key/Cues y verifica qué archivos existen en disco.",
-    accent: "var(--rekordbox-blue)",
-    detail: "Vista previa y control de rutas",
+      "Inspecciona la Rueda Camelot y la curva BPM, limpia tags sucios de descarga, corrige BPM ×2/÷2, auto-ordena armónicamente y repara rutas rotas.",
+    accent: "#ff7a1a",
+    detail: "Rueda Camelot · Limpiador · Auto-Relocator",
   },
   {
     number: "04",
+    deckTag: "PUENTE",
     title: "Revisa Spotify y elige formatos",
     description:
-      "Selecciona Traktor NML v19, M3U8 (absoluto o relativo), copia de audio portable o Spotify. Corrige temas dudosos en Spotify antes de crear la playlist.",
-    accent: "var(--traktor-white)",
-    detail: "NML v19 · M3U8 · Spotify · CSV · JSON",
+      "Elige Traktor NML v19, Rekordbox XML, M3U8, Hoja HTML de Cabina, CUE Sheet o Spotify PKCE. Confirma matches dudosos visualmente antes de exportar.",
+    accent: "#e8edf7",
+    detail: "NML v19 · RB XML · Spotify PKCE · HTML Prep",
   },
   {
     number: "05",
-    title: "Listo para la cabina",
+    deckTag: "CABINA",
+    title: "Listo para pinchar en directo",
     description:
-      "Abre la carpeta generada para importar en Traktor Pro o abre tu nueva playlist de Spotify con informe completo de temas no encontrados.",
-    accent: "var(--spotify-green)",
-    detail: "Resultados al instante",
+      "Importa tu librería convertida en Traktor Pro o Rekordbox, abre tu nueva playlist en Spotify o imprime tu Hoja de Cabina con cues y tonalidades.",
+    accent: "#1db954",
+    detail: "100% local · Cero fricción",
   },
 ];
 
@@ -94,66 +104,81 @@ export default function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="py-24 grid-bg"
+      className="py-24 grid-bg relative"
       style={{ background: "var(--bg-base)" }}
     >
-      <div className="max-w-6xl mx-auto px-5">
+      <div className="max-w-5xl mx-auto px-5">
         <div className="text-center mb-16">
           <p
-            className="text-xs font-semibold tracking-widest uppercase mb-4"
+            className="text-xs font-mono font-bold tracking-widest uppercase mb-4"
             style={{ color: "var(--rekordbox-blue)" }}
           >
-            {locale === "es" ? "Cómo funciona" : "How it works"}
+            {locale === "es" ? "FLUJO DE SEÑAL" : "SIGNAL FLOW"}
           </p>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight font-display">
             {locale === "es" ? "Cinco pasos, cero fricción" : "Five steps, zero friction"}
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
             {locale === "es"
               ? "Sin suscripciones. Sin subir tu música a la nube. Solo tus archivos y tus playlists."
-              : "No subscriptions. No cloud uploads. Just your files and your music."}
+              : "No subscriptions. No cloud uploads. Just your files and your playlists."}
           </p>
         </div>
 
         <div className="relative">
+          {/* Illuminated vertical signal bus */}
           <div
-            className="absolute left-5 top-0 bottom-0 w-px hidden md:block"
+            className="absolute left-6 top-4 bottom-4 w-[2px] hidden md:block rounded-full"
             style={{
               background:
-                "linear-gradient(180deg, var(--rekordbox-blue), var(--traktor-white), var(--spotify-green))",
-              opacity: 0.2,
+                "linear-gradient(180deg, #0095ff 0%, #7fd3ff 28%, #ff7a1a 55%, #e8edf7 78%, #1db954 100%)",
+              opacity: 0.3,
             }}
           />
 
-          <div className="flex flex-col gap-6">
-            {steps.map((step, i) => (
+          <div className="flex flex-col gap-5">
+            {steps.map((step) => (
               <div
                 key={step.number}
-                className="flex flex-col md:flex-row gap-4 md:gap-8 items-start md:items-center group"
+                className="flex flex-col md:flex-row gap-4 md:gap-7 items-start md:items-center group"
               >
+                {/* Hardware Rack LED Node */}
                 <div
-                  className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0 transition-all duration-300 group-hover:scale-110"
+                  className="relative z-10 w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono flex-shrink-0 transition-all duration-300 group-hover:scale-105"
                   style={{
-                    background: `${step.accent}20`,
-                    border: `2px solid ${step.accent}`,
+                    background: `linear-gradient(180deg, ${step.accent}22 0%, rgba(10,13,20,0.95) 100%)`,
+                    border: `1.5px solid ${step.accent}88`,
                     color: step.accent,
-                    boxShadow: `0 0 20px ${step.accent}33`,
+                    boxShadow: `0 0 22px ${step.accent}25`,
                   }}
                 >
-                  {i + 1}
+                  <span className="text-sm font-black leading-none">{step.number}</span>
+                  <span className="text-[8px] font-bold tracking-widest opacity-80 mt-0.5">
+                    {step.deckTag}
+                  </span>
                 </div>
 
-                <div className="glass rounded-2xl p-5 flex-1 group-hover:border-white/10 transition-all duration-200">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
+                {/* Rack Module Card */}
+                <div
+                  className="deck-console rounded-2xl p-5 sm:p-6 flex-1 w-full transition-all duration-200 group-hover:border-white/20 relative overflow-hidden"
+                  style={{ borderColor: `${step.accent}24` }}
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px] opacity-60"
+                    style={{
+                      background: `linear-gradient(90deg, ${step.accent}, transparent 65%)`,
+                    }}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <h3 className="text-base sm:text-lg font-bold text-white">
                       {step.title}
                     </h3>
                     <span
-                      className="px-2 py-0.5 rounded text-xs font-medium"
+                      className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold"
                       style={{
-                        background: `${step.accent}15`,
+                        background: `${step.accent}14`,
                         color: step.accent,
-                        border: `1px solid ${step.accent}33`,
+                        border: `1px solid ${step.accent}35`,
                       }}
                     >
                       {step.detail}

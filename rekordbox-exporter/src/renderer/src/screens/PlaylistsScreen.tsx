@@ -353,10 +353,11 @@ export default function PlaylistsScreen({
           <button
             className="btn-secondary"
             onClick={handleMergeSelected}
-            style={{ whiteSpace: 'nowrap', color: 'var(--green)' }}
+            style={{ whiteSpace: 'nowrap', color: '#46ee82', borderColor: 'rgba(29, 185, 84, 0.32)' }}
             title="Combina las playlists seleccionadas en una sola eliminando duplicados"
           >
-            🔗 Fusionar ({selectedPlaylists.length})
+            <span className="led-dot" style={{ background: '#1db954', boxShadow: '0 0 6px #1db954' }} />
+            Fusionar ({selectedPlaylists.length})
           </button>
         )}
 
@@ -364,20 +365,27 @@ export default function PlaylistsScreen({
           <button
             className="btn-secondary"
             onClick={handleCompareTwo}
-            style={{ whiteSpace: 'nowrap' }}
+            style={{ whiteSpace: 'nowrap', color: '#8cd0ff', borderColor: 'rgba(0, 149, 255, 0.32)' }}
             title="Compara las 2 playlists seleccionadas para ver diferencias y temas comunes"
           >
-            ⚖️ Comparar (Diff)
+            <span className="led-dot" style={{ background: '#0095ff', boxShadow: '0 0 6px #0095ff' }} />
+            Comparar (Diff)
           </button>
         )}
 
         <button
           className="btn-secondary"
           onClick={() => setShowRemapper((v) => !v)}
-          style={{ whiteSpace: 'nowrap', marginLeft: 'auto' }}
+          style={{
+            whiteSpace: 'nowrap',
+            marginLeft: 'auto',
+            borderColor: showRemapper ? 'rgba(255, 122, 26, 0.5)' : undefined,
+            color: showRemapper ? '#ffab5e' : undefined
+          }}
           title="Reemplaza prefijos rotos o escanea una carpeta local para relocalizar pistas"
         >
-          🔧 Reparar rutas
+          <span className="led-dot" style={{ background: '#ff7a1a', boxShadow: '0 0 6px #ff7a1a' }} />
+          Reparar rutas
         </button>
       </div>
 
@@ -385,7 +393,7 @@ export default function PlaylistsScreen({
         <div
           style={{
             padding: '12px 24px',
-            background: '#161b26',
+            background: '#111622',
             borderBottom: '1px solid var(--border)',
             display: 'flex',
             flexWrap: 'wrap',
@@ -393,7 +401,9 @@ export default function PlaylistsScreen({
             gap: 10
           }}
         >
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Prefijo:</span>
+          <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#ffab5e' }}>
+            PATH REMAP
+          </span>
           <input
             type="text"
             placeholder="Ej: /Volumes/USB  o  C:/Music"
@@ -418,7 +428,7 @@ export default function PlaylistsScreen({
             disabled={relocating}
             title="Escanea una carpeta de tu PC y repara automáticamente las pistas faltantes por nombre"
           >
-            {relocating ? 'Escaneando...' : '🔍 Auto-buscar en carpeta'}
+            {relocating ? 'Escaneando...' : 'Auto-buscar en disco'}
           </button>
           <button className="btn-ghost" onClick={() => setShowRemapper(false)}>
             ✕
@@ -498,7 +508,7 @@ export default function PlaylistsScreen({
                   <div className={styles.previewSub}>
                     {previewPlaylist.tracks.length} tracks · {formatDuration(analytics.totalDurationSeconds)}
                     {analytics.bpmMin !== undefined && ` · ${analytics.bpmMin}–${analytics.bpmMax} BPM`}
-                    {analytics.harmonicScore !== null && ` · 🎹 ${analytics.harmonicScore}% armónico`}
+                    {analytics.harmonicScore !== null && ` · ${analytics.harmonicScore}% Camelot`}
                   </div>
                 </div>
                 <button
@@ -526,14 +536,14 @@ export default function PlaylistsScreen({
                 <div style={{ display: 'flex', gap: 5 }}>
                   <button
                     className={previewTab === 'tracks' ? 'btn-primary' : 'btn-ghost'}
-                    style={{ fontSize: 11, padding: '4px 9px' }}
+                    style={{ fontSize: 11, padding: '4px 10px' }}
                     onClick={() => setPreviewTab('tracks')}
                   >
                     Pistas ({previewPlaylist.tracks.length})
                   </button>
                   <button
                     className={previewTab === 'analytics' ? 'btn-primary' : 'btn-ghost'}
-                    style={{ fontSize: 11, padding: '4px 9px' }}
+                    style={{ fontSize: 11, padding: '4px 10px' }}
                     onClick={() => setPreviewTab('analytics')}
                   >
                     Análisis DJ {analytics.duplicates.length > 0 ? `(${analytics.duplicates.length} dup)` : ''}
@@ -542,51 +552,54 @@ export default function PlaylistsScreen({
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   <button
                     className="btn-ghost"
-                    style={{ fontSize: 11, padding: '4px 8px', color: 'var(--green)' }}
+                    style={{ fontSize: 11, padding: '4px 9px', color: '#46ee82', borderColor: 'rgba(29,185,84,0.28)' }}
                     onClick={handleHarmonicSort}
                     title="Ordena las pistas maximizando compatibilidad Camelot y progresión suave de BPM"
                   >
-                    ✨ Camelot
+                    <span className="led-dot" style={{ background: '#1db954', boxShadow: '0 0 6px #1db954' }} />
+                    Camelot
                   </button>
                   <button
                     className="btn-ghost"
-                    style={{ fontSize: 11, padding: '4px 8px', color: '#6cc2ff' }}
+                    style={{ fontSize: 11, padding: '4px 9px', color: '#6cc2ff', borderColor: 'rgba(0,149,255,0.28)' }}
                     onClick={handleCleanMetadata}
                     title="Limpia [FREE DOWNLOAD], (320kbps), extrae Artista - Título y normaliza tonalidades a Camelot"
                   >
-                    🧼 Limpiar tags
+                    <span className="led-dot" style={{ background: '#0095ff', boxShadow: '0 0 6px #0095ff' }} />
+                    Limpiar tags
                   </button>
                   <button
                     className="btn-ghost"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '4px 9px', color: '#ffab5e', borderColor: 'rgba(255,122,26,0.28)' }}
                     onClick={handleFixHalfDoubleBpm}
                     title="Corrige pistas analizadas a mitad o doble BPM respecto al set"
                   >
-                    ⚡ BPM ×2/÷2
+                    <span className="led-dot" style={{ background: '#ff7a1a', boxShadow: '0 0 6px #ff7a1a' }} />
+                    BPM ×2/÷2
                   </button>
                   <button
                     className="btn-ghost"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '4px 9px' }}
                     onClick={handleSplitByBpm}
                     title="Divide en sub-playlists por zonas BPM (Warm-Up, Groove, Peak Time, Hard)"
                   >
-                    ✂️ Zonas BPM
+                    Zonas BPM
                   </button>
                   <button
                     className="btn-ghost"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '4px 9px' }}
                     onClick={handleSplitByGenre}
                     title="Divide en sub-playlists agrupadas por género"
                   >
-                    🏷️ Géneros
+                    Géneros
                   </button>
                   {analytics.duplicates.length > 0 && (
                     <button
                       className="btn-ghost"
-                      style={{ fontSize: 11, padding: '4px 8px', color: 'var(--amber)' }}
+                      style={{ fontSize: 11, padding: '4px 9px', color: '#ffab5e', borderColor: 'rgba(255,122,26,0.35)' }}
                       onClick={handleDeduplicate}
                     >
-                      🧹 Duplicados
+                      Quitar duplicados
                     </button>
                   )}
                 </div>

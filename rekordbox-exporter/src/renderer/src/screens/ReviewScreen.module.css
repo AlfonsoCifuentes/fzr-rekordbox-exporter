@@ -8,12 +8,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
+  padding: 13px 24px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg2);
+  background: linear-gradient(90deg, rgba(13, 16, 24, 0.92), rgba(29, 185, 84, 0.08));
 }
 
-.header h2 { font-size: 16px; font-weight: 600; }
+.header h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
 
 .headerStats {
   display: flex;
@@ -22,30 +25,32 @@
 
 .playlistTabs {
   display: flex;
-  gap: 6px;
-  padding: 8px 24px;
-  background: var(--bg2);
+  gap: 7px;
+  padding: 9px 24px;
+  background: rgba(11, 14, 22, 0.85);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
 }
 
-.tab, .tabActive {
+.tab,
+.tabActive {
   font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 99px;
+  padding: 5px 13px;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
 .tab {
-  background: var(--bg3);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
 
 .tabActive {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
+  background: linear-gradient(135deg, #22d962 0%, #1db954 100%);
+  color: #031108;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(29, 185, 84, 0.3);
 }
 
 .toolbar {
@@ -54,7 +59,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 10px 24px;
-  background: var(--bg2);
+  background: rgba(11, 14, 22, 0.72);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
@@ -64,23 +69,24 @@
   gap: 6px;
 }
 
-.filterBtn, .filterActive {
+.filterBtn,
+.filterActive {
   font-size: 12px;
-  padding: 5px 11px;
-  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  border-radius: 999px;
 }
 
 .filterBtn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
 
 .filterActive {
-  background: var(--bg4);
-  color: var(--text);
-  border: 1px solid var(--accent);
-  font-weight: 600;
+  background: rgba(0, 149, 255, 0.16);
+  color: #8cd0ff;
+  border: 1px solid rgba(0, 149, 255, 0.45);
+  font-weight: 700;
 }
 
 .toolbarHint {
@@ -91,8 +97,8 @@
 .errorBanner {
   margin: 12px 24px 0;
   padding: 10px 14px;
-  background: rgba(231, 76, 60, 0.14);
-  border: 1px solid var(--red);
+  background: rgba(239, 83, 80, 0.14);
+  border: 1px solid rgba(239, 83, 80, 0.5);
   border-radius: var(--radius);
   color: #ffb2a8;
   font-size: 12px;
@@ -101,6 +107,7 @@
 .tableWrapper {
   flex: 1;
   overflow-y: auto;
+  background: rgba(7, 8, 13, 0.65);
 }
 
 .table {
@@ -112,33 +119,42 @@
 .table thead th {
   position: sticky;
   top: 0;
-  background: var(--bg3);
+  background: #111521;
   padding: 10px 14px;
   text-align: left;
-  font-size: 11px;
+  font-size: 10.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.6px;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
   z-index: 1;
 }
 
-.row, .rowMuted {
-  border-bottom: 1px solid var(--border);
+.row,
+.rowMuted {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+  transition: background 0.12s;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .rowMuted {
-  opacity: 0.55;
+  opacity: 0.48;
 }
 
-.row td, .rowMuted td {
-  padding: 10px 14px;
+.row td,
+.rowMuted td {
+  padding: 11px 14px;
   vertical-align: top;
 }
 
 .numCell {
-  color: var(--text-muted);
-  font-size: 12px;
+  color: var(--text-subtle);
+  font-family: monospace;
+  font-size: 11.5px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -154,17 +170,38 @@
 }
 
 .candSelect {
-  margin-top: 6px;
+  margin-top: 7px;
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   font-size: 11px;
-  padding: 4px 8px;
+  padding: 5px 9px;
 }
 
 .noMatchText {
   font-size: 12px;
   color: var(--text-muted);
   font-style: italic;
+}
+
+.confidenceMeterWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 78px;
+}
+
+.confidenceBarTrack {
+  height: 4px;
+  width: 100%;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.confidenceBarFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.25s ease;
 }
 
 .actionBtns {
@@ -174,19 +211,20 @@
 }
 
 .manualRow td {
-  padding: 0 14px 12px;
-  background: var(--bg2);
+  padding: 0 14px 14px;
+  background: rgba(13, 16, 24, 0.85);
   border-bottom: 1px solid var(--border);
 }
 
 .manualBox {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
+  background: var(--glass);
+  border: 1px solid rgba(0, 149, 255, 0.3);
+  border-radius: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .manualSearchBar {
@@ -198,7 +236,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 220px;
+  max-height: 230px;
   overflow-y: auto;
 }
 
@@ -206,17 +244,17 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
-  background: var(--bg2);
+  padding: 8px 11px;
+  background: rgba(7, 8, 13, 0.72);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 9px;
   font-size: 12px;
 }
 
 .footer {
-  padding: 14px 24px;
+  padding: 13px 24px;
   border-top: 1px solid var(--border);
-  background: var(--bg2);
+  background: rgba(13, 16, 24, 0.92);
   display: flex;
   align-items: center;
   justify-content: space-between;

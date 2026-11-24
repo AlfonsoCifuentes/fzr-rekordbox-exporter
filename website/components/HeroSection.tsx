@@ -1,12 +1,45 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { useLocale } from "./LocaleContext";
 import { GITHUB_REPO, useLatestRelease } from "./useLatestRelease";
 import { FzrLogoMark } from "./BrandIcons";
 
+type ConsoleMode = "traktor" | "spotify" | "camelot";
+
 export default function HeroSection() {
   const { locale } = useLocale();
   const release = useLatestRelease();
+  const [mode, setMode] = useState<ConsoleMode>("traktor");
+
+  const modeMeta: Record<
+    ConsoleMode,
+    { file: string; stat1: string; stat2: string; status: string; playhead: string }
+  > = {
+    traktor: {
+      file: "Berlin_Peak_Time.xml → .nml",
+      stat1: "138.0 BPM",
+      stat2: "4 CUES · NML v19",
+      status: "SYNC READY",
+      playhead: "#ff7a1a",
+    },
+    spotify: {
+      file: "Berlin_Peak_Time.xml → Spotify",
+      stat1: "48 TRACKS",
+      stat2: "94% PKCE MATCH",
+      status: "OAUTH PKCE",
+      playhead: "#1db954",
+    },
+    camelot: {
+      file: "Camelot_Harmonic_Flow.set",
+      stat1: "8A → 9A → 10A",
+      stat2: "96% HARMONIC",
+      status: "0 CLASHES",
+      playhead: "#0095ff",
+    },
+  };
+
+  const current = modeMeta[mode];
 
   return (
     <section
@@ -53,9 +86,7 @@ export default function HeroSection() {
             style={{ background: "var(--spotify-green)", boxShadow: "0 0 8px var(--spotify-green)" }}
           />
           <span style={{ color: "var(--text-muted)" }}>
-            {locale === "es"
-              ? `Open Source · Windows 10/11 + Web Deck · ${release.tagName}`
-              : `Open Source · Windows 10/11 + Web Deck · ${release.tagName}`}
+            Open Source · Windows 10/11 + Web Deck · {release.tagName}
           </span>
         </div>
 
@@ -82,7 +113,8 @@ export default function HeroSection() {
             <>
               Convierte librerías y playlists entre{" "}
               <span style={{ color: "#5ec0ff", fontWeight: 600 }}>Rekordbox</span>,{" "}
-              <span style={{ color: "#ffab5e", fontWeight: 600 }}>Traktor Pro</span> y{" "}
+              <span style={{ color: "#ffab5e", fontWeight: 600 }}>Traktor Pro</span>,{" "}
+              <span style={{ color: "#e8edf7", fontWeight: 600 }}>Serato / VDJ</span> y{" "}
               <span style={{ color: "#3ee87b", fontWeight: 600 }}>Spotify</span> conservando Hot
               Cues, Loops, Open Key ↔ Camelot y curvas BPM. 100% local y sin suscripciones.
             </>
@@ -90,7 +122,8 @@ export default function HeroSection() {
             <>
               Convert DJ libraries &amp; playlists across{" "}
               <span style={{ color: "#5ec0ff", fontWeight: 600 }}>Rekordbox</span>,{" "}
-              <span style={{ color: "#ffab5e", fontWeight: 600 }}>Traktor Pro</span> &amp;{" "}
+              <span style={{ color: "#ffab5e", fontWeight: 600 }}>Traktor Pro</span>,{" "}
+              <span style={{ color: "#e8edf7", fontWeight: 600 }}>Serato / VDJ</span> &amp;{" "}
               <span style={{ color: "#3ee87b", fontWeight: 600 }}>Spotify</span> while preserving
               Hot Cues, Loops, Open Key ↔ Camelot &amp; BPM curves. 100% local, zero subscriptions.
             </>
@@ -134,13 +167,13 @@ export default function HeroSection() {
           </a>
         </div>
 
-        {/* Pro DJ Dual-Deck Studio Signal Console */}
+        {/* Interactive Pro DJ Dual-Deck Studio Signal Console */}
         <div className="max-w-4xl mx-auto deck-console rounded-3xl overflow-hidden text-left mb-12">
-          {/* Console Top Bezel */}
+          {/* Console Top Bezel with Mode Switcher */}
           <div
-            className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-b text-xs"
+            className="flex flex-wrap items-center justify-between gap-2.5 px-5 py-3 border-b text-xs"
             style={{
-              background: "rgba(7,9,14,0.92)",
+              background: "rgba(7,9,14,0.94)",
               borderColor: "rgba(255,255,255,0.07)",
             }}
           >
@@ -149,22 +182,58 @@ export default function HeroSection() {
               <span className="font-mono font-bold text-[11px] tracking-wider text-white">
                 FZR BOOTH OS
               </span>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-white/60">
-                Berlin_Peak_Time.xml
+              <span className="hidden sm:inline-block font-mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-white/60">
+                {current.file}
               </span>
             </div>
 
-            <div className="flex items-center gap-3 font-mono text-[10px]">
+            {/* Interactive Hardware Mode Pads */}
+            <div className="flex items-center gap-1.5 bg-white/[0.03] p-1 rounded-full border border-white/[0.08]">
+              {(
+                [
+                  { id: "traktor", label: "RB ⇄ TR", color: "#ff7a1a" },
+                  { id: "spotify", label: "→ SPOTIFY", color: "#1db954" },
+                  { id: "camelot", label: "CAMELOT", color: "#0095ff" },
+                ] as const
+              ).map((tab) => {
+                const active = mode === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setMode(tab.id)}
+                    className="px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
+                    style={{
+                      background: active ? `${tab.color}24` : "transparent",
+                      color: active ? "#ffffff" : "rgba(255,255,255,0.48)",
+                      border: active ? `1px solid ${tab.color}88` : "1px solid transparent",
+                      boxShadow: active ? `0 0 12px ${tab.color}33` : "none",
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: active ? tab.color : "rgba(255,255,255,0.22)",
+                        boxShadow: active ? `0 0 6px ${tab.color}` : "none",
+                      }}
+                    />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:flex items-center gap-3 font-mono text-[10px]">
               <span className="inline-flex items-center gap-1.5 text-[#5ec0ff]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0095ff]" />
-                138.0 BPM
+                {current.stat1}
               </span>
               <span className="inline-flex items-center gap-1.5 text-[#ffab5e]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ff7a1a]" />
-                CAMELOT 94%
+                {current.stat2}
               </span>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
-                ● SYNC READY
+                ● {current.status}
               </span>
             </div>
           </div>
@@ -173,22 +242,23 @@ export default function HeroSection() {
           <div
             className="relative px-5 py-3.5 border-b flex items-center justify-between gap-0.5 overflow-hidden"
             style={{
-              background: "rgba(4,6,10,0.85)",
+              background: "rgba(4,6,10,0.88)",
               borderColor: "rgba(255,255,255,0.06)",
             }}
             aria-hidden
           >
             {/* Playhead center needle */}
             <div
-              className="absolute top-0 bottom-0 left-1/2 w-[2px] z-10"
+              className="absolute top-0 bottom-0 left-1/2 w-[2px] z-10 transition-all duration-300"
               style={{
-                background: "linear-gradient(180deg, #ff7a1a, #ffffff, #ff7a1a)",
-                boxShadow: "0 0 12px #ff7a1a",
+                background: `linear-gradient(180deg, ${current.playhead}, #ffffff, ${current.playhead})`,
+                boxShadow: `0 0 14px ${current.playhead}`,
               }}
             />
             {Array.from({ length: 64 }).map((_, i) => {
               const t = i / 63;
-              const h = 10 + Math.abs(Math.sin(i * 0.48 + 0.3)) * 22 + Math.abs(Math.cos(i * 0.19)) * 10;
+              const phase = mode === "traktor" ? 0.3 : mode === "spotify" ? 1.2 : 2.1;
+              const h = 10 + Math.abs(Math.sin(i * 0.48 + phase)) * 22 + Math.abs(Math.cos(i * 0.19)) * 10;
               const color =
                 t < 0.34
                   ? "#0095ff"
@@ -202,7 +272,7 @@ export default function HeroSection() {
               return (
                 <div
                   key={i}
-                  className="flex-1 rounded-full animate-eq"
+                  className="flex-1 rounded-full animate-eq transition-all duration-300"
                   style={{
                     height: `${Math.round(h)}px`,
                     background: color,
@@ -217,10 +287,11 @@ export default function HeroSection() {
           <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
             {/* Deck A: Rekordbox */}
             <div
-              className="rounded-2xl p-4 border relative overflow-hidden"
+              className="rounded-2xl p-4 border relative overflow-hidden transition-all duration-300"
               style={{
-                background: "linear-gradient(180deg, rgba(0,149,255,0.09) 0%, rgba(10,13,21,0.85) 100%)",
-                borderColor: "rgba(0,149,255,0.28)",
+                background: "linear-gradient(180deg, rgba(0,149,255,0.11) 0%, rgba(10,13,21,0.88) 100%)",
+                borderColor: mode === "camelot" ? "rgba(0,149,255,0.72)" : "rgba(0,149,255,0.28)",
+                boxShadow: mode === "camelot" ? "0 0 28px rgba(0,149,255,0.18)" : "none",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -228,7 +299,7 @@ export default function HeroSection() {
                   DECK A · REKORDBOX
                 </span>
                 <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#0095ff]/15 text-[#7ccdff]">
-                  XML / TXT
+                  {mode === "camelot" ? "CAMELOT FLOW" : "XML / TXT"}
                 </span>
               </div>
               <div className="space-y-2">
@@ -239,7 +310,7 @@ export default function HeroSection() {
                   </span>
                 </div>
                 <div className="font-mono text-[10px] text-white/50">
-                  136 BPM · 4 Hot Cues · 1 Loop
+                  {mode === "camelot" ? "136 BPM · ✓ Perfect +1 Step" : "136 BPM · 4 Hot Cues · 1 Loop"}
                 </div>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between">
                   <span className="font-semibold text-white/85 truncate pr-2">Dax J — Propaganda</span>
@@ -252,10 +323,11 @@ export default function HeroSection() {
 
             {/* Deck B: Traktor NML v19 */}
             <div
-              className="rounded-2xl p-4 border relative overflow-hidden"
+              className="rounded-2xl p-4 border relative overflow-hidden transition-all duration-300"
               style={{
-                background: "linear-gradient(180deg, rgba(255,122,26,0.09) 0%, rgba(10,13,21,0.85) 100%)",
-                borderColor: "rgba(255,122,26,0.28)",
+                background: "linear-gradient(180deg, rgba(255,122,26,0.11) 0%, rgba(10,13,21,0.88) 100%)",
+                borderColor: mode === "traktor" ? "rgba(255,122,26,0.72)" : "rgba(255,122,26,0.28)",
+                boxShadow: mode === "traktor" ? "0 0 28px rgba(255,122,26,0.18)" : "none",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -276,10 +348,11 @@ export default function HeroSection() {
 
             {/* Deck C: Spotify Streaming */}
             <div
-              className="rounded-2xl p-4 border relative overflow-hidden"
+              className="rounded-2xl p-4 border relative overflow-hidden transition-all duration-300"
               style={{
-                background: "linear-gradient(180deg, rgba(29,185,84,0.1) 0%, rgba(10,13,21,0.85) 100%)",
-                borderColor: "rgba(29,185,84,0.3)",
+                background: "linear-gradient(180deg, rgba(29,185,84,0.12) 0%, rgba(10,13,21,0.88) 100%)",
+                borderColor: mode === "spotify" ? "rgba(29,185,84,0.72)" : "rgba(29,185,84,0.3)",
+                boxShadow: mode === "spotify" ? "0 0 28px rgba(29,185,84,0.18)" : "none",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -314,14 +387,18 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Tri-brand precision strip */}
-        <div className="flex items-center justify-center gap-6 sm:gap-10 opacity-60 font-mono">
+        {/* Multi-platform precision strip */}
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-9 opacity-65 font-mono">
           <span className="text-[11px] font-bold tracking-widest uppercase text-[#5ec0ff]">
             Rekordbox
           </span>
           <span className="w-px h-3.5 bg-white/25" />
           <span className="text-[11px] font-bold tracking-widest uppercase text-[#ffab5e]">
             Traktor Pro
+          </span>
+          <span className="w-px h-3.5 bg-white/25" />
+          <span className="text-[11px] font-bold tracking-widest uppercase text-[#e8edf7]">
+            Serato · VDJ
           </span>
           <span className="w-px h-3.5 bg-white/25" />
           <span className="text-[11px] font-bold tracking-widest uppercase text-[#46ee82]">

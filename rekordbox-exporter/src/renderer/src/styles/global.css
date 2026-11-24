@@ -39,9 +39,20 @@
   --radius: 12px;
   --radius-sm: 8px;
   --radius-pill: 999px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, ui-monospace, monospace;
 
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif;
   font-size: 14px;
+}
+
+.led-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 body {

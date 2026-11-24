@@ -276,9 +276,12 @@ export default function ExportScreen({
           <strong>{totalTracks.toLocaleString()}</strong> tracks en total
         </div>
 
-        {/* Traktor / DJ section */}
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Traktor / DJ</h3>
+        {/* Traktor / Pioneer DJ section */}
+        <section className={styles.section} style={{ borderTop: '2px solid rgba(0, 149, 255, 0.6)' }}>
+          <h3 className={styles.sectionTitle} style={{ color: '#6cc2ff' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#0095ff', boxShadow: '0 0 8px #0095ff' }} />
+            Decks DJ — Traktor Pro &amp; Rekordbox
+          </h3>
           <label className={styles.option}>
             <input
               type="checkbox"
@@ -426,8 +429,11 @@ export default function ExportScreen({
         </section>
 
         {/* Spotify section */}
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Spotify</h3>
+        <section className={styles.section} style={{ borderTop: '2px solid rgba(29, 185, 84, 0.65)' }}>
+          <h3 className={styles.sectionTitle} style={{ color: '#46ee82' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1db954', boxShadow: '0 0 8px #1db954' }} />
+            Spotify Streaming Engine (OAuth PKCE)
+          </h3>
 
           <label className={styles.option}>
             <input
@@ -557,8 +563,11 @@ export default function ExportScreen({
 
         {/* Output folder */}
         {needsFolder && (
-          <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Carpeta de destino</h3>
+          <section className={styles.section} style={{ borderTop: '2px solid rgba(255, 122, 26, 0.55)' }}>
+            <h3 className={styles.sectionTitle} style={{ color: '#ffab5e' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff7a1a', boxShadow: '0 0 8px #ff7a1a' }} />
+              Carpeta de destino
+            </h3>
             <div className={styles.dirRow}>
               <div className={styles.dirPath}>
                 {outputDir ?? <span className={styles.dimText}>Sin seleccionar</span>}

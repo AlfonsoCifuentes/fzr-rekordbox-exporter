@@ -5,7 +5,7 @@ import type {
   ExportResult,
   SpotifyMatch
 } from '../../core/common/types'
-import { FzrEmblem } from './components/StudioIcons'
+import { FzrEmblem, MiniRgbWaveform } from './components/StudioIcons'
 import HomeScreen from './screens/HomeScreen'
 import ImportScreen from './screens/ImportScreen'
 import PlaylistsScreen from './screens/PlaylistsScreen'
@@ -340,6 +340,43 @@ export default function App(): JSX.Element {
             onBack={() => go('home')}
           />
         )}
+      </div>
+
+      {/* Persistent Traktor/Rekordbox Hardware Footer Status Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '6px 18px',
+          background: '#080a10',
+          borderTop: '1px solid var(--border)',
+          fontFamily: 'monospace',
+          fontSize: 10.5,
+          color: 'var(--text-muted)',
+          flexShrink: 0
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#46ee82', fontWeight: 700 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1db954', boxShadow: '0 0 8px #1db954' }} />
+            ENGINE READY
+          </span>
+          {state.sourceFilePath && (
+            <span style={{ color: '#8cd0ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 320 }}>
+              · {state.sourceFilePath.split(/[\\/]/).pop()}
+              {state.parseResult ? ` (${state.parseResult.tracks.length} tracks · ${state.parseResult.playlists.length} pl)` : ''}
+            </span>
+          )}
+        </div>
+
+        <MiniRgbWaveform bars={22} height={12} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <span>100% LOCAL · ZERO UPLOAD</span>
+          <span style={{ color: 'var(--text)', fontWeight: 700 }}>v1.5.0</span>
+        </div>
       </div>
     </div>
   )
