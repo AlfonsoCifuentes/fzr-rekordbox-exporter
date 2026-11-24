@@ -41,6 +41,14 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run dist
 
+      - name: Create permanent latest-alias binaries
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem "release\FZR-Rekordbox-Exporter-*-x64.exe" | Select-Object -First 1
+          if ($exe) { Copy-Item $exe.FullName "release\FZR-Rekordbox-Exporter-Setup-x64.exe" -Force }
+          $zip = Get-ChildItem "release\FZR-Rekordbox-Exporter-*-x64.zip" | Select-Object -First 1
+          if ($zip) { Copy-Item $zip.FullName "release\FZR-Rekordbox-Exporter-Portable-x64.zip" -Force }
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

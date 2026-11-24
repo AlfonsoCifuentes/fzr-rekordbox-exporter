@@ -68,8 +68,8 @@ export default function DownloadSection() {
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
             {locale === "es"
-              ? "Desbloquea Spotify OAuth PKCE con revisión manual, relocalizador de archivos en disco, copia portable de audio e historial de cabina."
-              : "Unlock direct Spotify OAuth PKCE with manual review, disk auto-relocator, portable USB audio copy & persistent booth history."}
+              ? "Auto-detección de Rekordbox, Traktor, Serato y VirtualDJ, Soulseek Autopilot nativo, Spotify OAuth PKCE y descarga directa siempre en su última versión."
+              : "Auto-detects Rekordbox, Traktor, Serato & VirtualDJ on your PC, built-in Soulseek Autopilot, Spotify OAuth PKCE, and always-latest Windows installer."}
           </p>
         </div>
 
