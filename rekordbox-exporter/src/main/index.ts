@@ -2,13 +2,14 @@ import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } from 'electro
 import { join, basename, extname } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs'
 import { randomUUID } from 'crypto'
-import { parseRekordboxFile } from '../core/rekordbox/parseRekordboxFile'
+import { parseDjBuffer } from '../core/rekordbox/parseRekordboxFile'
 import { buildRekordboxXml } from '../core/rekordbox/rekordboxXmlBuilder'
 import {
   buildDjSetlistTxt,
   buildDjSetlistMarkdown,
   buildStreamingCsv,
-  buildCueSheet
+  buildCueSheet,
+  buildHtmlPrepSheet
 } from '../core/export/extraExporters'
 import { relocateTracksFromFileList } from '../core/analytics/playlistTools'
 import { decodeTextBuffer, sanitizeFilename } from '../core/common/filePaths'
@@ -223,22 +224,22 @@ app.on('window-all-closed', () => {
 
 function parseLocalRekordboxFile(filePath: string) {
   const buffer = readFileSync(filePath)
-  const content = decodeTextBuffer(buffer)
-  const parseResult = parseRekordboxFile(content, filePath)
+  const parseResult = parseDjBuffer(buffer, filePath, decodeTextBuffer)
   return { filePath, parseResult }
 }
 
-/** Open file dialog and parse — supports Rekordbox XML/M3U8/TXT and Traktor NML */
+/** Open file dialog and parse — supports Rekordbox, Traktor, Serato .crate, VirtualDJ, M3U8, TXT & CSV */
 ipcMain.handle('rekordbox:openAndParse', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Seleccionar exportación de Rekordbox o Traktor',
+    title: 'Seleccionar librería o playlist DJ',
     filters: [
       {
-        name: 'Exportaciones DJ (Rekordbox / Traktor / CSV)',
-        extensions: ['xml', 'nml', 'm3u8', 'm3u', 'txt', 'csv']
+        name: 'Librerías DJ (Rekordbox / Traktor / Serato / VirtualDJ / CSV)',
+        extensions: ['xml', 'nml', 'crate', 'vdjfolder', 'm3u8', 'm3u', 'txt', 'csv']
       },
-      { name: 'Rekordbox XML', extensions: ['xml'] },
-      { name: 'Traktor NML', extensions: ['nml'] },
+      { name: 'Rekordbox / VirtualDJ XML', extensions: ['xml', 'vdjfolder'] },
+      { name: 'Traktor Pro NML', extensions: ['nml'] },
+      { name: 'Serato DJ Crate', extensions: ['crate'] },
       { name: 'Playlist M3U8/M3U', extensions: ['m3u8', 'm3u'] },
       { name: 'Texto de Rekordbox (TXT)', extensions: ['txt'] },
       { name: 'CSV Streaming (Exportify / Soundiiz)', extensions: ['csv'] },
@@ -361,6 +362,7 @@ ipcMain.handle(
       exportRekordboxXml?: boolean
       exportSetlist?: boolean
       exportCueSheet?: boolean
+      exportPrepSheetHtml?: boolean
       exportStreamingCsv?: boolean
       exportSpotifyTxt: boolean
       playlistNamePrefix?: string
@@ -499,6 +501,12 @@ ipcMain.handle(
         writeFileSync(cueSheetPath, buildCueSheet(playlist), 'utf-8')
       }
 
+      let prepSheetHtmlPath: string | undefined
+      if (options.exportPrepSheetHtml) {
+        prepSheetHtmlPath = join(playlistDir, `${safePlaylistName}_booth_prep.html`)
+        writeFileSync(prepSheetHtmlPath, buildHtmlPrepSheet(playlist), 'utf-8')
+      }
+
       let streamingCsvPath: string | undefined
       if (options.exportStreamingCsv) {
         streamingCsvPath = join(playlistDir, `${safePlaylistName}_streaming.csv`)
@@ -514,6 +522,7 @@ ipcMain.handle(
         setlistTxtPath,
         setlistMdPath,
         cueSheetPath,
+        prepSheetHtmlPath,
         streamingCsvPath,
         reportJsonPath: join(playlistDir, `${safePlaylistName}_report.json`),
         reportCsvPath: join(playlistDir, `${safePlaylistName}_report.csv`),

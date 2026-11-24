@@ -135,17 +135,134 @@ export async function decodeUploadedFile(file: File): Promise<string> {
   return new TextDecoder("utf-8").decode(buf)
 }
 
+export async function parseUploadedDjFile(file: File): Promise<WebParseOutput> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+  if (ext === "crate") {
+    return parseBrowserSeratoCrate(await file.arrayBuffer(), file.name)
+  }
+  const text = await decodeUploadedFile(file)
+  return parseBrowserDjFile(text, file.name)
+}
+
+export function parseBrowserSeratoCrate(buf: ArrayBuffer, fileName: string): WebParseOutput {
+  const bytes = new Uint8Array(buf)
+  const view = new DataView(buf)
+  const ascii = (start: number, len: number) =>
+    String.fromCharCode(...bytes.subarray(start, start + len))
+
+  if (bytes.length < 8 || ascii(0, 4) !== "vrsn") {
+    throw new Error("Invalid Serato .crate file (missing vrsn header).")
+  }
+
+  const tracks: WebTrack[] = []
+  let offset = 0
+  while (offset + 8 <= bytes.length) {
+    const tag = ascii(offset, 4)
+    const len = view.getUint32(offset + 4, false)
+    offset += 8
+    if (offset + len > bytes.length) break
+    if (tag === "otrk") {
+      let sub = offset
+      const end = offset + len
+      while (sub + 8 <= end) {
+        const stag = ascii(sub, 4)
+        const slen = view.getUint32(sub + 4, false)
+        sub += 8
+        if (sub + slen > end) break
+        if (stag === "ptrk") {
+          const decoded = new TextDecoder("utf-16be").decode(bytes.subarray(sub, sub + slen)).replace(/\0+$/, "").trim()
+          const loc = /^[A-Za-z]:\//.test(decoded) || decoded.startsWith("/") ? decoded : `/${decoded}`
+          const stem = (loc.split(/[\\/]/).pop() ?? "").replace(/\.[^.]+$/, "")
+          const dash = stem.indexOf(" - ")
+          tracks.push({
+            id: `serato-${tracks.length}`,
+            artist: dash > 0 ? stem.slice(0, dash).trim() : "(unknown artist)",
+            name: dash > 0 ? stem.slice(dash + 3).trim() : stem || "(untitled)",
+            location: loc,
+          })
+        }
+        sub += slen
+      }
+    }
+    offset += len
+  }
+
+  const parts = fileName.replace(/\.crate$/i, "").split("%%").map((s) => s.trim()).filter(Boolean)
+  const name = parts[parts.length - 1] || "Serato Crate"
+  return {
+    format: "Serato Crate",
+    playlists: [{ id: "pl-0", name, folder: parts.slice(0, -1).join(" / "), tracks }],
+    totalTracks: tracks.length,
+  }
+}
+
 export function parseBrowserDjFile(content: string, fileName: string): WebParseOutput {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? ""
   const clean = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content
 
-  if (ext === "xml") return parseBrowserRekordboxXml(clean)
+  if (ext === "xml") {
+    if (/<VirtualDJ_Database\b|<VirtualFolder\b/i.test(clean)) {
+      return parseBrowserVirtualDjXml(clean, fileName)
+    }
+    return parseBrowserRekordboxXml(clean)
+  }
+  if (ext === "vdjfolder") return parseBrowserVirtualDjXml(clean, fileName)
   if (ext === "nml") return parseBrowserTraktorNml(clean, fileName)
   if (ext === "m3u8" || ext === "m3u") return parseBrowserM3u8(clean, fileName)
   if (ext === "txt") return parseBrowserTxt(clean, fileName)
   if (ext === "csv") return parseBrowserCsv(clean, fileName)
 
-  throw new Error(`Unsupported file format .${ext}. Use .xml, .nml, .m3u8, .m3u, .txt or .csv.`)
+  throw new Error(`Unsupported file format .${ext}. Use .xml, .nml, .crate, .vdjfolder, .m3u8, .m3u, .txt or .csv.`)
+}
+
+function parseBrowserVirtualDjXml(xml: string, fileName: string): WebParseOutput {
+  const doc = new DOMParser().parseFromString(xml, "application/xml")
+  if (doc.querySelector("parsererror")) {
+    throw new Error("Invalid VirtualDJ XML file.")
+  }
+  const tracks: WebTrack[] = []
+  doc.querySelectorAll("Song").forEach((el, idx) => {
+    const filePath = el.getAttribute("FilePath")?.replace(/\\/g, "/") || undefined
+    const tags = el.querySelector("Tags")
+    const infos = el.querySelector("Infos")
+    const scan = el.querySelector("Scan")
+    const fallback = filePath?.split("/").pop()?.replace(/\.[^.]+$/, "") ?? ""
+    const tagBpm = parseFloat(tags?.getAttribute("Bpm") ?? "")
+    const scanSpb = parseFloat(scan?.getAttribute("Bpm") ?? "")
+    let bpm: number | undefined
+    if (!isNaN(tagBpm) && tagBpm > 20) bpm = Math.round(tagBpm * 100) / 100
+    else if (!isNaN(scanSpb) && scanSpb > 0.1 && scanSpb < 3) bpm = Math.round((60 / scanSpb) * 100) / 100
+    const dur = parseFloat(infos?.getAttribute("SongLength") ?? "")
+    const cues: WebCuePoint[] = []
+    el.querySelectorAll("Poi").forEach((poi) => {
+      const t = (poi.getAttribute("Type") ?? "").toLowerCase()
+      const pos = parseFloat(poi.getAttribute("Pos") ?? "")
+      if (isNaN(pos) || (t !== "cue" && t !== "loop")) return
+      const size = parseFloat(poi.getAttribute("Size") ?? "0")
+      const isLoop = t === "loop" || size > 0
+      cues.push({
+        name: poi.getAttribute("Name") || undefined,
+        type: isLoop ? 4 : 0,
+        startMs: Math.round(pos * 1000),
+        endMs: isLoop && size > 0 ? Math.round((pos + size) * 1000) : undefined,
+        hotCueIndex: parseInt(poi.getAttribute("Num") ?? "0", 10) - 1,
+      })
+    })
+    tracks.push({
+      id: `vdj-${idx}`,
+      name: tags?.getAttribute("Title") || fallback || "(untitled)",
+      artist: tags?.getAttribute("Author") || "(unknown artist)",
+      album: tags?.getAttribute("Album") || undefined,
+      genre: tags?.getAttribute("Genre") || undefined,
+      bpm,
+      key: scan?.getAttribute("Key") || tags?.getAttribute("Key") || undefined,
+      durationSeconds: isNaN(dur) ? undefined : dur,
+      location: filePath,
+      cuePoints: cues.length > 0 ? cues : undefined,
+    })
+  })
+  const name = fileName.replace(/\.[^.]+$/, "") || "VirtualDJ"
+  return { format: "VirtualDJ XML", playlists: [{ id: "pl-0", name, folder: "", tracks }], totalTracks: tracks.length }
 }
 
 function parseBrowserRekordboxXml(xml: string): WebParseOutput {
@@ -548,9 +665,73 @@ export function analyzeWebPlaylist(playlist: WebPlaylist): WebAnalytics {
     totalCues,
     topKeys: Array.from(keyMap.entries())
       .map(([key, count]) => ({ key, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6),
+      .sort((a, b) => b.count - a.count),
   }
+}
+
+export function cleanWebPlaylistMetadata(playlist: WebPlaylist): { playlist: WebPlaylist; cleaned: number } {
+  const noise = [
+    /\[(free\s*(download|dl)|promo|master|hq|wav|flac|320\s*kbps|out\s*now)\]/gi,
+    /\((free\s*(download|dl)|320\s*kbps|master|mastered|hq|official\s*(audio|video))\)/gi,
+    /\bwww\.[a-z0-9.-]+\.[a-z]{2,}\b/gi,
+    /\.(mp3|wav|flac|aiff|aif|ogg|m4a)$/gi,
+  ]
+  const cleanStr = (s: string) => {
+    let o = s
+    noise.forEach((rx) => { o = o.replace(rx, "") })
+    if (o.includes("_") && !o.includes(" ")) o = o.replace(/_+/g, " ")
+    return o.replace(/\s+/g, " ").trim()
+  }
+  let cleaned = 0
+  const tracks = playlist.tracks.map((t) => {
+    let name = cleanStr(t.name)
+    let artist = cleanStr(t.artist)
+    let key = t.key
+    let changed = name !== t.name || artist !== t.artist
+    if ((!artist || artist === "(unknown artist)") && name.includes(" - ")) {
+      const i = name.indexOf(" - ")
+      artist = name.slice(0, i).trim()
+      name = name.slice(i + 3).trim()
+      changed = true
+    }
+    const cam = toCamelot(key)
+    if (cam && cam !== key) {
+      key = cam
+      changed = true
+    }
+    if (changed) cleaned++
+    return { ...t, name: name || t.name, artist: artist || t.artist, key }
+  })
+  return { playlist: { ...playlist, tracks }, cleaned }
+}
+
+export function fixWebHalfDoubleBpm(playlist: WebPlaylist): { playlist: WebPlaylist; fixed: number } {
+  const bpms = playlist.tracks.map((t) => t.bpm).filter((b): b is number => Boolean(b && b > 0)).sort((a, b) => a - b)
+  if (bpms.length < 3) return { playlist, fixed: 0 }
+  const median = bpms[Math.floor(bpms.length / 2)]
+  let fixed = 0
+  const tracks = playlist.tracks.map((t) => {
+    if (!t.bpm) return t
+    const currD = Math.abs(t.bpm - median) / median
+    const dblD = Math.abs(t.bpm * 2 - median) / median
+    const halfD = Math.abs(t.bpm / 2 - median) / median
+    if (currD > 0.25 && dblD <= 0.16) { fixed++; return { ...t, bpm: Math.round(t.bpm * 200) / 100 } }
+    if (currD > 0.25 && halfD <= 0.16) { fixed++; return { ...t, bpm: Math.round(t.bpm * 50) / 100 } }
+    return t
+  })
+  return { playlist: { ...playlist, tracks }, fixed }
+}
+
+export function exportWebHtmlPrepSheet(playlist: WebPlaylist): string {
+  const stats = analyzeWebPlaylist(playlist)
+  const fmt = (sec: number) => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(Math.floor(sec % 60)).padStart(2, "0")}`
+  let elapsed = 0
+  const rows = playlist.tracks.map((t, i) => {
+    const ts = fmt(elapsed)
+    elapsed += t.durationSeconds ?? 0
+    return `<tr><td>${String(i + 1).padStart(2, "0")}</td><td>${ts}</td><td><strong>${escXml(t.name)}</strong><br><small>${escXml(t.artist)}</small></td><td>${t.bpm ? Math.round(t.bpm) : "—"}</td><td>${escXml(toCamelot(t.key) ?? t.key ?? "—")}</td></tr>`
+  }).join("")
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escXml(playlist.name)} — FZR Booth Prep</title><style>body{background:#07080d;color:#eef2fa;font-family:system-ui,sans-serif;padding:28px}table{width:100%;border-collapse:collapse;background:#101420}th,td{padding:10px;border-bottom:1px solid #232a3d;text-align:left}small{color:#8a94ac}@media print{body{background:#fff;color:#111}table{background:#fff}}</style></head><body><h1>${escXml(playlist.name)}</h1><p>${stats.totalTracks} tracks · ${stats.bpmMin ?? "—"}–${stats.bpmMax ?? "—"} BPM · Camelot ${stats.harmonicScore ?? "—"}%</p><table><thead><tr><th>#</th><th>Time</th><th>Track</th><th>BPM</th><th>Key</th></tr></thead><tbody>${rows}</tbody></table></body></html>`
 }
 
 export function sortWebPlaylistHarmonically(playlist: WebPlaylist): WebPlaylist {

@@ -119,6 +119,19 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
                     </button>
                   </div>
                 )}
+                {result.prepSheetHtmlPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType} style={{ background: 'rgba(0,149,255,0.2)', color: '#6cc2ff' }}>HTML PREP</span>
+                    <span className={styles.filePath}>{result.prepSheetHtmlPath}</span>
+                    <button
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 8px' }}
+                      onClick={() => openFolder(result.prepSheetHtmlPath)}
+                    >
+                      Abrir carpeta
+                    </button>
+                  </div>
+                )}
                 {result.streamingCsvPath && (
                   <div className={styles.fileRow}>
                     <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954' }}>STREAM</span>

@@ -168,6 +168,7 @@ export default function ReviewScreen({
         exportConfig.exportRekordboxXml ||
         exportConfig.exportSetlist ||
         exportConfig.exportCueSheet ||
+        exportConfig.exportPrepSheetHtml ||
         exportConfig.exportStreamingCsv ||
         exportConfig.exportSpotifyTxt
 
@@ -180,6 +181,7 @@ export default function ReviewScreen({
           exportRekordboxXml: exportConfig.exportRekordboxXml,
           exportSetlist: exportConfig.exportSetlist,
           exportCueSheet: exportConfig.exportCueSheet,
+          exportPrepSheetHtml: exportConfig.exportPrepSheetHtml,
           exportStreamingCsv: exportConfig.exportStreamingCsv,
           exportSpotifyTxt: exportConfig.exportSpotifyTxt,
           playlistNamePrefix: exportConfig.playlistNamePrefix || undefined,

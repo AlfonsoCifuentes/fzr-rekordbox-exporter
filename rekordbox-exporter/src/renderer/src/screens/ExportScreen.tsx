@@ -10,6 +10,7 @@ export type PendingExportConfig = {
   exportRekordboxXml: boolean
   exportSetlist: boolean
   exportCueSheet: boolean
+  exportPrepSheetHtml: boolean
   exportStreamingCsv: boolean
   exportSpotifyTxt: boolean
   exportSpotifyApi: boolean
@@ -41,6 +42,7 @@ export default function ExportScreen({
   const [exportRekordboxXml, setExportRekordboxXml] = useState(false)
   const [exportSetlist, setExportSetlist] = useState(false)
   const [exportCueSheet, setExportCueSheet] = useState(false)
+  const [exportPrepSheetHtml, setExportPrepSheetHtml] = useState(false)
   const [exportStreamingCsv, setExportStreamingCsv] = useState(false)
   const [playlistNamePrefix, setPlaylistNamePrefix] = useState('')
   const [preserveFolders, setPreserveFolders] = useState(true)
@@ -125,6 +127,7 @@ export default function ExportScreen({
     exportRekordboxXml ||
     exportSetlist ||
     exportCueSheet ||
+    exportPrepSheetHtml ||
     exportStreamingCsv ||
     exportSpotifyTxt
   const canExport =
@@ -159,6 +162,7 @@ export default function ExportScreen({
           exportRekordboxXml,
           exportSetlist,
           exportCueSheet,
+          exportPrepSheetHtml,
           exportStreamingCsv,
           exportSpotifyTxt,
           exportSpotifyApi,
@@ -207,6 +211,7 @@ export default function ExportScreen({
           exportRekordboxXml,
           exportSetlist,
           exportCueSheet,
+          exportPrepSheetHtml,
           exportStreamingCsv,
           exportSpotifyTxt,
           playlistNamePrefix: playlistNamePrefix.trim() || undefined,
@@ -341,6 +346,20 @@ export default function ExportScreen({
               <div className={styles.optionLabel}>Exportar CUE Sheet (.cue)</div>
               <div className={styles.optionDesc}>
                 Hoja de marcas estándar INDEX 01 (MM:SS:00) compatible con Mixcloud, Audacity, foobar2000 y sesiones grabadas.
+              </div>
+            </div>
+          </label>
+          <label className={styles.option}>
+            <input
+              type="checkbox"
+              checked={exportPrepSheetHtml}
+              onChange={(e) => setExportPrepSheetHtml(e.target.checked)}
+              disabled={exporting}
+            />
+            <div>
+              <div className={styles.optionLabel}>Exportar Booth Prep Sheet (.html)</div>
+              <div className={styles.optionDesc}>
+                Hoja interactiva imprimible / para tablet en cabina con tiempos, BPM, tonalidades Camelot, cues y transiciones.
               </div>
             </div>
           </label>

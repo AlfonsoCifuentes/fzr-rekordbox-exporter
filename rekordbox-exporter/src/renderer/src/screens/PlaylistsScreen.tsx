@@ -14,7 +14,9 @@ import {
   type PlaylistDiff
 } from '../../../core/analytics/playlistTools'
 import { remapPlaylistPaths } from '../../../core/export/extraExporters'
+import { cleanPlaylistMetadata, fixHalfDoubleBpm } from '../../../core/analytics/cleanMetadata'
 import { getCamelotPillStyle } from '../components/StudioIcons'
+import CamelotWheel from '../components/CamelotWheel'
 import styles from './PlaylistsScreen.module.css'
 
 type Props = {
@@ -215,6 +217,30 @@ export default function PlaylistsScreen({
     if (removedCount === 0) return
     replacePlaylist(cleaned)
     notify(`Se eliminaron ${removedCount} pista(s) duplicada(s) de "${cleaned.name}"`)
+  }
+
+  const handleCleanMetadata = (): void => {
+    if (!previewPlaylist) return
+    const rep = cleanPlaylistMetadata(previewPlaylist)
+    if (rep.tracksCleaned === 0) {
+      notify('Los metadatos y tonalidades Camelot de esta playlist ya están limpios')
+      return
+    }
+    replacePlaylist(rep.playlist)
+    notify(
+      `✓ ${rep.tracksCleaned} pista(s) limpiadas (${rep.keysNormalized} keys → Camelot, ${rep.artistsExtracted} artistas extraídos)`
+    )
+  }
+
+  const handleFixHalfDoubleBpm = (): void => {
+    if (!previewPlaylist) return
+    const rep = fixHalfDoubleBpm(previewPlaylist)
+    if (rep.fixedCount === 0) {
+      notify('No se detectaron pistas con BPM a mitad o doble respecto a la mediana del set')
+      return
+    }
+    replacePlaylist(rep.playlist)
+    notify(`✓ ${rep.fixedCount} pista(s) corregidas (BPM ×2/÷2 ajustado a mediana ${rep.medianBpm} BPM)`)
   }
 
   const handleMergeSelected = (): void => {
@@ -524,6 +550,22 @@ export default function PlaylistsScreen({
                   </button>
                   <button
                     className="btn-ghost"
+                    style={{ fontSize: 11, padding: '4px 8px', color: '#6cc2ff' }}
+                    onClick={handleCleanMetadata}
+                    title="Limpia [FREE DOWNLOAD], (320kbps), extrae Artista - Título y normaliza tonalidades a Camelot"
+                  >
+                    🧼 Limpiar tags
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    onClick={handleFixHalfDoubleBpm}
+                    title="Corrige pistas analizadas a mitad o doble BPM respecto al set"
+                  >
+                    ⚡ BPM ×2/÷2
+                  </button>
+                  <button
+                    className="btn-ghost"
                     style={{ fontSize: 11, padding: '4px 8px' }}
                     onClick={handleSplitByBpm}
                     title="Divide en sub-playlists por zonas BPM (Warm-Up, Groove, Peak Time, Hard)"
@@ -716,14 +758,15 @@ export default function PlaylistsScreen({
                     </div>
                   </div>
 
-                  {/* Top Camelot keys */}
+                  {/* Top Camelot keys + Interactive Camelot Wheel */}
                   {analytics.keyDistribution.length > 0 && (
                     <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 12 }}>
-                      <div style={{ fontWeight: 600, marginBottom: 8 }}>Distribución de tonalidades (Camelot)</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 10 }}>Rueda Armónica Camelot</div>
+                      <CamelotWheel keyDistribution={analytics.keyDistribution} size={200} />
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, justifyContent: 'center' }}>
                         {analytics.keyDistribution.slice(0, 12).map((k) => (
-                          <span key={k.key} className="tag tag-muted">
-                            {k.key}: <strong style={{ marginLeft: 4, color: 'var(--text)' }}>{k.count}</strong>
+                          <span key={k.key} style={getCamelotPillStyle(k.key)}>
+                            {k.key} ({k.count})
                           </span>
                         ))}
                       </div>

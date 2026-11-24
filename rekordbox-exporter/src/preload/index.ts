@@ -36,6 +36,7 @@ export type ExportPlaylistsOptions = {
   exportRekordboxXml?: boolean
   exportSetlist?: boolean
   exportCueSheet?: boolean
+  exportPrepSheetHtml?: boolean
   exportStreamingCsv?: boolean
   exportSpotifyTxt: boolean
   playlistNamePrefix?: string

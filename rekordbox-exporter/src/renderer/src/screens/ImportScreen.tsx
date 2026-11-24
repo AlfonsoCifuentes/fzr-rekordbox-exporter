@@ -14,8 +14,10 @@ export default function ImportScreen({ filePath, parseResult, onContinue, onBack
   const fileName = filePath.split(/[\\/]/).pop() ?? filePath
   const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
   const formatLabels: Record<string, string> = {
-    xml: 'Rekordbox XML',
+    xml: 'Rekordbox / VirtualDJ XML',
     nml: 'Traktor Pro NML',
+    crate: 'Serato DJ Crate',
+    vdjfolder: 'VirtualDJ Folder',
     m3u8: 'Playlist M3U8',
     m3u: 'Playlist M3U',
     txt: 'Texto Rekordbox (TXT)',

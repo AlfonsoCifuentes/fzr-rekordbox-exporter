@@ -4,6 +4,7 @@ import {
   buildDjSetlistMarkdown,
   buildStreamingCsv,
   buildCueSheet,
+  buildHtmlPrepSheet,
   remapPlaylistPaths
 } from '../../core/export/extraExporters'
 import type { Playlist } from '../../core/common/types'
@@ -64,6 +65,14 @@ describe('extraExporters & path remapper', () => {
     expect(cue).toContain('INDEX 01 00:00:00')
     expect(cue).toContain('TRACK 02 AUDIO')
     expect(cue).toContain('INDEX 01 06:00:00')
+  })
+
+  it('builds printable HTML Booth Prep Sheet', () => {
+    const html = buildHtmlPrepSheet(pl)
+    expect(html).toContain('<!DOCTYPE html>')
+    expect(html).toContain('Sunset House')
+    expect(html).toContain('Kerri Chandler')
+    expect(html).toContain('100%')
   })
 
   it('remaps path prefixes across playlists cleanly', () => {

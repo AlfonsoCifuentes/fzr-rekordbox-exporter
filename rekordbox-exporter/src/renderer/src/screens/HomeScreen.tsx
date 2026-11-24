@@ -74,7 +74,7 @@ export default function HomeScreen({
         <div className={styles.brandLeft}>
           <FzrEmblem size={28} />
           <span className={styles.brandName}>FZR</span>
-          <span className={styles.versionPill}>v1.4.0 · 100% Local</span>
+          <span className={styles.versionPill}>v1.5.0 · 100% Local</span>
         </div>
 
         <div className={styles.signalStrip}>
@@ -164,10 +164,10 @@ export default function HomeScreen({
           </div>
 
           <div className={styles.formats}>
-            <span className={styles.formatBadgeBlue}>.xml Rekordbox</span>
+            <span className={styles.formatBadgeBlue}>.xml Rekordbox / VDJ</span>
             <span className={styles.formatBadgeAmber}>.nml Traktor</span>
-            <span className={styles.formatBadge}>.m3u8 / .m3u</span>
-            <span className={styles.formatBadge}>.txt UTF-16</span>
+            <span className={styles.formatBadge}>.crate Serato</span>
+            <span className={styles.formatBadge}>.m3u8 / .txt</span>
             <span className={styles.formatBadgeGreen}>.csv Spotify</span>
           </div>
 

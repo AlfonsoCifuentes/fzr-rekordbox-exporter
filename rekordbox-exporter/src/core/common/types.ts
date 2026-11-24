@@ -111,6 +111,7 @@ export type ExportResult = {
   setlistTxtPath?: string
   setlistMdPath?: string
   cueSheetPath?: string
+  prepSheetHtmlPath?: string
   streamingCsvPath?: string
   nmlPath?: string
   m3uPath?: string

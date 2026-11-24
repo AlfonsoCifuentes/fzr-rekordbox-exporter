@@ -3,15 +3,17 @@
 import React, { useState, useMemo } from "react";
 import { useLocale } from "./LocaleContext";
 import { FzrLogoMark, getCamelotBadgeStyle } from "./BrandIcons";
+import CamelotWheelSvg from "./CamelotWheelSvg";
 import {
   type WebParseOutput,
   type WebPlaylist,
   DEMO_SET,
-  decodeUploadedFile,
-  parseBrowserDjFile,
+  parseUploadedDjFile,
   analyzeWebPlaylist,
   sortWebPlaylistHarmonically,
   deduplicateWebPlaylist,
+  cleanWebPlaylistMetadata,
+  fixWebHalfDoubleBpm,
   toCamelot,
   exportWebM3u8,
   exportWebNml,
@@ -19,6 +21,7 @@ import {
   exportWebSetlistTxt,
   exportWebStreamingCsv,
   exportWebCueSheet,
+  exportWebHtmlPrepSheet,
   remapWebPlaylistPaths,
   splitWebPlaylistByBpm,
 } from "@/lib/djConverter";
@@ -63,8 +66,7 @@ export default function OnlineConverterSection() {
   const handleFile = async (file: File) => {
     setError(null);
     try {
-      const text = await decodeUploadedFile(file);
-      const parsed = parseBrowserDjFile(text, file.name);
+      const parsed = await parseUploadedDjFile(file);
       if (parsed.playlists.length === 0) {
         setError(
           locale === "es"
@@ -149,8 +151,8 @@ export default function OnlineConverterSection() {
             </div>
             <h3 className="text-lg font-bold mb-2 font-display" style={{ color: "var(--text-primary)" }}>
               {locale === "es"
-                ? "Arrastra aquí un archivo .xml, .nml, .m3u8, .txt o .csv"
-                : "Drop a Rekordbox .xml, Traktor .nml, .m3u8, .txt or .csv file here"}
+                ? "Arrastra aquí un archivo .xml, .nml, .crate, .m3u8, .txt o .csv"
+                : "Drop a Rekordbox .xml, Traktor .nml, Serato .crate, VirtualDJ, .m3u8, .txt or .csv file"}
             </h3>
             <p className="text-xs mb-6" style={{ color: "var(--text-muted)" }}>
               {locale === "es"
@@ -166,7 +168,7 @@ export default function OnlineConverterSection() {
                 {locale === "es" ? "Seleccionar archivo" : "Choose file"}
                 <input
                   type="file"
-                  accept=".xml,.nml,.m3u8,.m3u,.txt,.csv"
+                  accept=".xml,.nml,.crate,.vdjfolder,.m3u8,.m3u,.txt,.csv"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -234,6 +236,36 @@ export default function OnlineConverterSection() {
                       style={{ background: "rgba(29,185,84,0.18)", color: "#3ae374", border: "1px solid rgba(29,185,84,0.35)" }}
                     >
                       ✨ {locale === "es" ? "Auto-ordenar Camelot" : "Harmonic Auto-Sort"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const res = cleanWebPlaylistMetadata(activePlaylist);
+                        updateActivePlaylist(res.playlist);
+                        setNotice(
+                          locale === "es"
+                            ? `${res.cleaned} pista(s) limpiadas y claves normalizadas a Camelot.`
+                            : `${res.cleaned} track(s) cleaned & keys normalized to Camelot.`
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-[#7ccdff] hover:border-white/25 cursor-pointer"
+                    >
+                      🧼 {locale === "es" ? "Limpiar tags" : "Clean Tags"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const res = fixWebHalfDoubleBpm(activePlaylist);
+                        updateActivePlaylist(res.playlist);
+                        setNotice(
+                          locale === "es"
+                            ? `${res.fixed} pista(s) corregidas (BPM ×2/÷2).`
+                            : `${res.fixed} track(s) fixed (half/double BPM).`
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold glass text-white/90 hover:border-white/25 cursor-pointer"
+                    >
+                      ⚡ BPM ×2/÷2
                     </button>
                     <button
                       type="button"
@@ -384,49 +416,56 @@ export default function OnlineConverterSection() {
               </div>
             )}
 
-            {/* Visual BPM Curve Sparkline */}
-            {activePlaylist && (() => {
+            {/* Visual BPM Curve + Interactive Camelot Wheel */}
+            {activePlaylist && analytics && (() => {
               const pts = activePlaylist.tracks
                 .map((t) => t.bpm)
                 .filter((b): b is number => Boolean(b && b > 0));
-              if (pts.length < 2) return null;
-              const minB = Math.min(...pts);
-              const maxB = Math.max(...pts);
+              if (pts.length < 2 && analytics.topKeys.length === 0) return null;
+              const minB = pts.length >= 2 ? Math.min(...pts) : 0;
+              const maxB = pts.length >= 2 ? Math.max(...pts) : 0;
               const span = Math.max(4, maxB - minB);
-              const W = 600;
-              const H = 64;
+              const W = 520;
+              const H = 86;
               const coords = pts.map((b, i) => {
-                const x = 10 + (i / (pts.length - 1)) * (W - 20);
-                const y = H - 10 - ((b - minB) / span) * (H - 20);
+                const x = 10 + (i / Math.max(1, pts.length - 1)) * (W - 20);
+                const y = H - 12 - ((b - minB) / span) * (H - 24);
                 return `${x.toFixed(1)},${y.toFixed(1)}`;
               });
-              const area = `10,${H - 10} ${coords.join(" ")} ${W - 10},${H - 10}`;
+              const area = `10,${H - 12} ${coords.join(" ")} ${W - 10},${H - 12}`;
               return (
                 <div
-                  className="px-6 py-3 border-b"
+                  className="px-6 py-4 border-b flex flex-col md:flex-row items-center gap-6"
                   style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.015)" }}
                 >
-                  <div className="flex justify-between text-[11px] mb-1" style={{ color: "var(--text-muted)" }}>
-                    <span>{locale === "es" ? "Curva de energía / BPM del set" : "Set Energy / BPM Curve"}</span>
-                    <span className="font-mono">{Math.round(minB)} → {Math.round(maxB)} BPM</span>
-                  </div>
-                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-14 block">
-                    <defs>
-                      <linearGradient id="webBpmGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1db954" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#1db954" stopOpacity="0.02" />
-                      </linearGradient>
-                    </defs>
-                    <polygon points={area} fill="url(#webBpmGrad)" />
-                    <polyline
-                      fill="none"
-                      stroke="#1db954"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      points={coords.join(" ")}
-                    />
-                  </svg>
+                  {pts.length >= 2 && (
+                    <div className="flex-1 w-full">
+                      <div className="flex justify-between text-[11px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+                        <span>{locale === "es" ? "Curva de energía / BPM del set" : "Set Energy / BPM Curve"}</span>
+                        <span className="font-mono">{Math.round(minB)} → {Math.round(maxB)} BPM</span>
+                      </div>
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 block">
+                        <defs>
+                          <linearGradient id="webBpmGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#1db954" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#1db954" stopOpacity="0.02" />
+                          </linearGradient>
+                        </defs>
+                        <polygon points={area} fill="url(#webBpmGrad)" />
+                        <polyline
+                          fill="none"
+                          stroke="#1db954"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          points={coords.join(" ")}
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  {analytics.topKeys.length > 0 && (
+                    <CamelotWheelSvg keys={analytics.topKeys} size={146} />
+                  )}
                 </div>
               );
             })()}
@@ -559,6 +598,13 @@ export default function OnlineConverterSection() {
                     className="px-4 py-2 rounded-full text-xs font-semibold glass hover:border-white/25 text-white cursor-pointer"
                   >
                     ↓ CUE Sheet .CUE
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerDownload(exportWebHtmlPrepSheet(activePlaylist), `${safeName}_booth_prep.html`, "text/html;charset=utf-8")}
+                    className="px-4 py-2 rounded-full text-xs font-semibold glass hover:border-white/25 text-[#7ccdff] cursor-pointer"
+                  >
+                    ↓ Booth Prep .HTML
                   </button>
                   <button
                     type="button"

@@ -126,6 +126,10 @@ export default function App(): JSX.Element {
         formats.add('CUE')
         if (!outputDir) outputDir = r.cueSheetPath.replace(/[\\/][^\\/]*$/, '')
       }
+      if (r.prepSheetHtmlPath) {
+        formats.add('HTML Prep')
+        if (!outputDir) outputDir = r.prepSheetHtmlPath.replace(/[\\/][^\\/]*$/, '')
+      }
       if (r.streamingCsvPath) {
         formats.add('Streaming CSV')
         if (!outputDir) outputDir = r.streamingCsvPath.replace(/[\\/][^\\/]*$/, '')
