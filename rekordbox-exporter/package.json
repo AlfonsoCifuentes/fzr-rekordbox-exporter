@@ -1,6 +1,6 @@
 {
   "name": "rekordbox-exporter",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "FZR Booth OS: Rekordbox, Traktor, Serato, VirtualDJ, Spotify & Soulseek Autopilot",
   "productName": "FZR Rekordbox Exporter",
   "main": "out/main/index.js",

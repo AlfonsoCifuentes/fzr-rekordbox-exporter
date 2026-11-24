@@ -4,11 +4,8 @@
   height: 100%;
   background: var(--bg);
   background-image:
-    radial-gradient(ellipse 60% 45% at 15% 10%, rgba(0, 149, 255, 0.11) 0%, transparent 70%),
-    radial-gradient(ellipse 55% 45% at 85% 90%, rgba(29, 185, 84, 0.1) 0%, transparent 70%),
-    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 28px 28px;
-  position: relative;
+    radial-gradient(ellipse 55% 45% at 15% 8%, rgba(0, 149, 255, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 45% at 88% 92%, rgba(29, 185, 84, 0.09) 0%, transparent 70%);
   overflow-y: auto;
 }
 
@@ -17,152 +14,64 @@
   outline-offset: -8px;
 }
 
-.topBar {
-  position: relative;
+.container {
+  max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 28px 32px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.heroHeader {
+  display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(10, 13, 21, 0.88);
-  backdrop-filter: blur(18px);
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.topBar::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #0095ff 25%, #e8edf7 50%, #ff7a1a 68%, #1db954 88%, transparent);
-  opacity: 0.45;
-}
-
-.brandLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brandName {
+.heroTitle {
+  font-size: 26px;
   font-weight: 900;
-  font-size: 16px;
-  letter-spacing: 0.6px;
-  background: linear-gradient(90deg, #0095ff 0%, #e8edf7 52%, #1db954 100%);
+  letter-spacing: -0.5px;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.heroTitle span {
+  background: linear-gradient(90deg, #0095ff 0%, #00d4ff 45%, #1db954 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.versionPill {
-  font-size: 11px;
-  font-weight: 600;
-  font-family: monospace;
+.heroSub {
+  font-size: 13.5px;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  padding: 3px 9px;
-  border-radius: 999px;
+  margin-top: 5px;
 }
 
-.signalStrip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  font-family: monospace;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.signalNode {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.signalNode i {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.signalArrow {
-  color: rgba(255, 255, 255, 0.25);
-}
-
-.topRight {
+.heroActions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.spotifyBadge {
+.spotifyPill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #46ee82;
-  background: rgba(29, 185, 84, 0.14);
-  border: 1px solid rgba(29, 185, 84, 0.35);
-  padding: 4px 11px;
+  background: rgba(29, 185, 84, 0.13);
+  border: 1px solid rgba(29, 185, 84, 0.34);
+  padding: 5px 11px;
   border-radius: 999px;
 }
 
-.spotifyDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--sp-green);
-  box-shadow: 0 0 8px var(--sp-green);
-}
-
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 24px 32px;
-  max-width: 880px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.logo {
-  text-align: center;
-}
-
-.title {
-  font-size: 32px;
-  font-weight: 900;
-  letter-spacing: -0.7px;
-  margin-bottom: 8px;
-}
-
-.titleGrad {
-  background: linear-gradient(90deg, #0095ff 0%, #e8edf7 50%, #1db954 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.subtitle {
-  color: var(--text-muted);
-  font-size: 14px;
-  max-width: 610px;
-  line-height: 1.55;
-}
-
 .errorBanner {
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -171,137 +80,140 @@
   border: 1px solid rgba(239, 83, 80, 0.45);
   color: #ffb2a8;
   padding: 10px 14px;
-  border-radius: var(--radius);
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 12.5px;
 }
 
-.dropzone {
-  position: relative;
-  width: 100%;
-  background: linear-gradient(180deg, rgba(18, 23, 36, 0.88) 0%, rgba(11, 14, 22, 0.92) 100%);
-  border: 1.5px dashed rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-  padding: 26px 24px;
+/* Section Headers */
+.sectionBlock {
   display: flex;
   flex-direction: column;
+  gap: 11px;
+}
+
+.sectionTop {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  cursor: pointer;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
-.dropzone:hover,
-.dropzoneActive {
-  border-color: rgba(29, 185, 84, 0.65);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 36px rgba(0, 149, 255, 0.16),
-    0 0 36px rgba(29, 185, 84, 0.16);
-  transform: translateY(-1px);
-}
-
-.platterWrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-}
-
-.platterOuterRing {
-  position: absolute;
-  inset: -4px;
-  border-radius: 22px;
-  border: 1px solid rgba(0, 149, 255, 0.25);
-  box-shadow: 0 0 30px rgba(0, 149, 255, 0.18), 0 0 30px rgba(29, 185, 84, 0.12);
-  pointer-events: none;
-}
-
-.dropTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: center;
-}
-
-.formats {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.formatBadge,
-.formatBadgeBlue,
-.formatBadgeAmber,
-.formatBadgeGreen {
-  border-radius: 999px;
-  padding: 3px 10px;
+.sectionHeading {
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  font-family: monospace;
-}
-
-.formatBadge {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-strong);
-  color: var(--tr-silver);
-}
-
-.formatBadgeBlue {
-  background: rgba(0, 149, 255, 0.14);
-  border: 1px solid rgba(0, 149, 255, 0.36);
-  color: #6cc2ff;
-}
-
-.formatBadgeAmber {
-  background: rgba(255, 122, 26, 0.14);
-  border: 1px solid rgba(255, 122, 26, 0.36);
-  color: #ffab5e;
-}
-
-.formatBadgeGreen {
-  background: rgba(29, 185, 84, 0.14);
-  border: 1px solid rgba(29, 185, 84, 0.36);
-  color: #46ee82;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  width: 100%;
-}
-
-.feature {
-  position: relative;
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
   display: flex;
-  gap: 13px;
-  align-items: flex-start;
-  overflow: hidden;
-  transition: border-color 0.2s, transform 0.2s;
+  align-items: center;
+  gap: 8px;
 }
 
-.feature:hover {
+/* Auto-Detected DJ Apps Grid */
+.detectGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1080px) {
+  .detectGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.detectCard {
+  background: rgba(14, 18, 29, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.16s;
+}
+
+.detectCard:hover {
   border-color: var(--border-strong);
   transform: translateY(-1px);
 }
 
-.featureAmber { border-top: 2px solid rgba(255, 122, 26, 0.55); }
-.featureGreen { border-top: 2px solid rgba(29, 185, 84, 0.55); }
-.featureBlue { border-top: 2px solid rgba(0, 149, 255, 0.55); }
-.featureSilver { border-top: 2px solid rgba(232, 237, 247, 0.38); }
+.detectCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-.featureIconWrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+.detectName {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.statusChip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.detectDetail {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  min-height: 32px;
+}
+
+.detectFileSelect {
+  width: 100%;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 5px 8px;
+  border-radius: 7px;
+}
+
+.detectActions {
+  margin-top: auto;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Quick Workflow Cards ("¿Qué quieres hacer hoy?") */
+.workflowGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.workflowCard {
+  background: linear-gradient(180deg, rgba(18, 23, 37, 0.92) 0%, rgba(12, 15, 24, 0.94) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, transform 0.15s, box-shadow 0.2s;
+}
+
+.workflowCard:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.workflowIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid;
   display: flex;
   align-items: center;
@@ -309,24 +221,116 @@
   flex-shrink: 0;
 }
 
-.feature strong {
-  display: block;
+.workflowTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
   margin-bottom: 3px;
-  font-size: 13px;
-  color: var(--text);
 }
 
-.feature p {
-  color: var(--text-muted);
+.workflowDesc {
   font-size: 12px;
-  line-height: 1.45;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
-.historyBox {
+.workflowArrow {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Input Deck Row (Dropzone + Spotify URL side-by-side) */
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 960px) {
+  .inputGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dropzone {
+  background: linear-gradient(180deg, rgba(17, 22, 35, 0.9) 0%, rgba(10, 13, 21, 0.94) 100%);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 15px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dropzone:hover,
+.dropzoneActive {
+  border-color: rgba(0, 149, 255, 0.7);
+  box-shadow: 0 0 28px rgba(0, 149, 255, 0.15);
+}
+
+.dropTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   width: 100%;
-  background: var(--glass);
+}
+
+.dropTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.dropSub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.formatPill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  color: var(--text-muted);
+}
+
+.spotifyCard {
+  background: linear-gradient(180deg, rgba(29, 185, 84, 0.09) 0%, rgba(10, 14, 21, 0.94) 100%);
+  border: 1px solid rgba(29, 185, 84, 0.34);
+  border-radius: 15px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spotifyForm {
+  display: flex;
+  gap: 8px;
+}
+
+/* History */
+.historyBox {
+  background: rgba(13, 17, 28, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -334,19 +338,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 14px;
+  padding: 8px 14px;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--border);
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
   font-weight: 700;
-  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-
-.historyList {
-  display: flex;
-  flex-direction: column;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
 }
 
 .historyItem {
@@ -362,31 +362,7 @@
   border-bottom: none;
 }
 
-.historyInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.historyInfo strong {
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.historyMeta {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.historyActions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
+/* Modal */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -395,7 +371,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 60;
   padding: 24px;
 }
 
@@ -403,7 +379,7 @@
   background: #0f131f;
   border: 1px solid var(--border-strong);
   border-radius: 16px;
-  max-width: 580px;
+  max-width: 560px;
   width: 100%;
   overflow: hidden;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
@@ -413,13 +389,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 15px 18px;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--border);
 }
 
 .modalBody {
-  padding: 20px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -429,16 +405,8 @@
 }
 
 .modalBody h4 {
-  color: var(--text);
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.modalBody ul {
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  color: #fff;
+  font-size: 13.5px;
 }
 
 .modalBody code {

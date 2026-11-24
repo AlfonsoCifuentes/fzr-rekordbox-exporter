@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage, Notification } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage, Notification, Menu } from 'electron'
 import { join, basename, extname } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs'
 import { randomUUID } from 'crypto'
@@ -13,6 +13,7 @@ import {
   saveAutopilotState,
   clearAutopilotState
 } from './soulseekStore'
+import { detectDjEnvironment, parseSeratoCratesBatch } from './djAutoDetect'
 import { buildRekordboxXml } from '../core/rekordbox/rekordboxXmlBuilder'
 import {
   buildDjSetlistTxt,
@@ -219,6 +220,8 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // Remove default Electron File/Edit/View menu bar for a clean studio app frame
+  Menu.setApplicationMenu(null)
   createWindow()
 
   app.on('activate', () => {
@@ -706,6 +709,29 @@ ipcMain.handle(
     }
   }
 )
+
+// ---- DJ Software Auto-Detector & Multi-Crate Loader ----------------------
+
+ipcMain.handle('system:detectDjEnvironment', () => {
+  return detectDjEnvironment()
+})
+
+ipcMain.handle('rekordbox:parseSeratoCrates', (_event, cratePaths: string[]) => {
+  if (!Array.isArray(cratePaths) || cratePaths.length === 0) {
+    throw new Error('No se encontraron archivos .crate para importar.')
+  }
+  const parseResult = parseSeratoCratesBatch(cratePaths)
+  return {
+    filePath: `Serato DJ (${cratePaths.length} crates)`,
+    parseResult
+  }
+})
+
+ipcMain.handle('shell:launchApp', async (_event, exePath: string) => {
+  if (exePath && existsSync(exePath)) {
+    await shell.openPath(exePath)
+  }
+})
 
 // ---- Public Spotify URL Importer & Soulseek Autopilot IPC Handlers -------
 

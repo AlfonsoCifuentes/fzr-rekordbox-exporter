@@ -17,12 +17,12 @@ export type ReleaseInfo = {
 };
 
 const FALLBACK_RELEASE: ReleaseInfo = {
-  tagName: "v2.0.0",
-  version: "2.0.0",
+  tagName: "v2.1.0",
+  version: "2.1.0",
   releaseUrl: `${GITHUB_REPO}/releases/latest`,
-  exeUrl: `${GITHUB_REPO}/releases/download/v2.0.0/FZR-Rekordbox-Exporter-2.0.0-x64.exe`,
+  exeUrl: `${GITHUB_REPO}/releases/download/v2.1.0/FZR-Rekordbox-Exporter-2.1.0-x64.exe`,
   exeSizeMb: "~76 MB",
-  zipUrl: `${GITHUB_REPO}/releases/download/v2.0.0/FZR-Rekordbox-Exporter-2.0.0-x64.zip`,
+  zipUrl: `${GITHUB_REPO}/releases/download/v2.1.0/FZR-Rekordbox-Exporter-2.1.0-x64.zip`,
   zipSizeMb: null,
 };
 

@@ -6,7 +6,8 @@ import type {
   ExportResult,
   SpotifyMatch,
   SpotifyCandidate,
-  ExportHistoryEntry
+  ExportHistoryEntry,
+  DetectedDjEnvironment
 } from '../core/common/types'
 import type {
   AutopilotConfig,
@@ -60,6 +61,9 @@ export type AutoRelocateResult = {
 }
 
 export type ElectronAPI = {
+  detectDjEnvironment: () => Promise<DetectedDjEnvironment>
+  parseSeratoCrates: (cratePaths: string[]) => Promise<{ filePath: string; parseResult: ParseResult }>
+  launchApp: (exePath: string) => Promise<void>
   openAndParse: () => Promise<{ filePath: string; parseResult: ParseResult } | null>
   parsePath: (filePath: string) => Promise<{ filePath: string; parseResult: ParseResult }>
   importSpotifyUrl: (urlOrId: string) => Promise<{ filePath: string; parseResult: ParseResult }>
@@ -119,6 +123,9 @@ export type ElectronAPI = {
 }
 
 const api: ElectronAPI = {
+  detectDjEnvironment: () => ipcRenderer.invoke('system:detectDjEnvironment'),
+  parseSeratoCrates: (cratePaths) => ipcRenderer.invoke('rekordbox:parseSeratoCrates', cratePaths),
+  launchApp: (exePath) => ipcRenderer.invoke('shell:launchApp', exePath),
   openAndParse: () => ipcRenderer.invoke('rekordbox:openAndParse'),
   parsePath: (filePath) => ipcRenderer.invoke('rekordbox:parsePath', filePath),
   importSpotifyUrl: (urlOrId) => ipcRenderer.invoke('import:spotifyUrl', urlOrId),

@@ -140,3 +140,31 @@ export type ExportHistoryEntry = {
   formats: string[]
   spotifyUrls: string[]
 }
+
+export type DetectedLibraryFile = {
+  path: string
+  label: string
+  software: 'rekordbox' | 'traktor' | 'serato' | 'virtualdj'
+  sizeBytes: number
+  modifiedAt: string
+}
+
+export type DetectedDjSoftware = {
+  id: 'rekordbox' | 'traktor' | 'serato' | 'virtualdj' | 'soulseek'
+  name: string
+  installed: boolean
+  versionLabel?: string
+  appExePath?: string
+  dataDir?: string
+  libraryFiles: DetectedLibraryFile[]
+}
+
+export type DetectedDjEnvironment = {
+  scannedAt: string
+  rekordbox: DetectedDjSoftware
+  traktor: DetectedDjSoftware
+  serato: DetectedDjSoftware
+  virtualdj: DetectedDjSoftware
+  soulseek: DetectedDjSoftware
+  suggestedDownloadDir?: string
+}

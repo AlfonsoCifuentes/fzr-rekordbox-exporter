@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type {
+  DetectedDjEnvironment,
   ParseResult,
   Playlist,
   ExportResult,
@@ -7,16 +8,15 @@ import type {
 } from '../../core/common/types'
 import { FzrEmblem, MiniRgbWaveform } from './components/StudioIcons'
 import HomeScreen from './screens/HomeScreen'
-import ImportScreen from './screens/ImportScreen'
 import PlaylistsScreen from './screens/PlaylistsScreen'
 import ExportScreen, { type PendingExportConfig } from './screens/ExportScreen'
 import ReviewScreen from './screens/ReviewScreen'
 import ResultsScreen from './screens/ResultsScreen'
 import AutopilotScreen from './screens/AutopilotScreen'
+import styles from './App.module.css'
 
 export type Screen =
   | 'home'
-  | 'import'
   | 'playlists'
   | 'export'
   | 'review'
@@ -32,17 +32,11 @@ export type AppState = {
   exportResults: ExportResult[]
 }
 
-const STEP_LABELS: Array<{ id: Screen; num: string; label: string }> = [
-  { id: 'import', num: '01', label: 'Archivo' },
-  { id: 'playlists', num: '02', label: 'Playlists' },
-  { id: 'export', num: '03', label: 'Exportar' },
-  { id: 'review', num: '04', label: 'Revisión' },
-  { id: 'results', num: '05', label: 'Listo' }
-]
-
 export default function App(): JSX.Element {
   const [screen, setScreen] = useState<Screen>('home')
   const [openError, setOpenError] = useState<string | null>(null)
+  const [djEnv, setDjEnv] = useState<DetectedDjEnvironment | null>(null)
+  const [scanningEnv, setScanningEnv] = useState(false)
   const [state, setState] = useState<AppState>({
     sourceFilePath: null,
     parseResult: null,
@@ -52,47 +46,78 @@ export default function App(): JSX.Element {
     exportResults: []
   })
 
+  const scanPc = async (): Promise<void> => {
+    setScanningEnv(true)
+    try {
+      const env = await window.electronAPI.detectDjEnvironment()
+      setDjEnv(env)
+    } catch {
+      // non-critical
+    } finally {
+      setScanningEnv(false)
+    }
+  }
+
+  useEffect(() => {
+    scanPc()
+  }, [])
+
   const go = (s: Screen): void => {
     setOpenError(null)
     setScreen(s)
   }
 
-  const handleOpenDialog = async (): Promise<void> => {
+  const applyParsedLibrary = (
+    filePath: string,
+    parseResult: ParseResult,
+    targetScreen: Screen = 'playlists'
+  ): void => {
+    const autoSelect =
+      parseResult.playlists.length <= 3
+        ? parseResult.playlists
+        : parseResult.playlists.slice(0, 1)
+    setState((s) => ({
+      ...s,
+      sourceFilePath: filePath,
+      parseResult,
+      selectedPlaylists: autoSelect,
+      spotifyMatchesByPlaylist: {},
+      pendingExportConfig: null
+    }))
+    go(targetScreen)
+  }
+
+  const handleOpenDialog = async (targetScreen: Screen = 'playlists'): Promise<void> => {
     setOpenError(null)
     try {
       const result = await window.electronAPI.openAndParse()
       if (!result) return
-      setState((s) => ({
-        ...s,
-        sourceFilePath: result.filePath,
-        parseResult: result.parseResult,
-        selectedPlaylists:
-          result.parseResult.playlists.length === 1 ? result.parseResult.playlists : [],
-        spotifyMatchesByPlaylist: {},
-        pendingExportConfig: null
-      }))
-      go('import')
+      applyParsedLibrary(result.filePath, result.parseResult, targetScreen)
     } catch (err) {
       setOpenError((err as Error).message || 'Error desconocido al leer el archivo')
     }
   }
 
-  const handleDropPath = async (filePath: string): Promise<void> => {
+  const handleLoadPath = async (
+    filePath: string,
+    targetScreen: Screen = 'playlists'
+  ): Promise<void> => {
     setOpenError(null)
     try {
       const result = await window.electronAPI.parsePath(filePath)
-      setState((s) => ({
-        ...s,
-        sourceFilePath: result.filePath,
-        parseResult: result.parseResult,
-        selectedPlaylists:
-          result.parseResult.playlists.length === 1 ? result.parseResult.playlists : [],
-        spotifyMatchesByPlaylist: {},
-        pendingExportConfig: null
-      }))
-      go('import')
+      applyParsedLibrary(result.filePath, result.parseResult, targetScreen)
     } catch (err) {
-      setOpenError((err as Error).message || 'Error al procesar el archivo arrastrado')
+      setOpenError((err as Error).message || 'Error al procesar el archivo seleccionado')
+    }
+  }
+
+  const handleLoadSeratoCrates = async (cratePaths: string[]): Promise<void> => {
+    setOpenError(null)
+    try {
+      const result = await window.electronAPI.parseSeratoCrates(cratePaths)
+      applyParsedLibrary(result.filePath, result.parseResult, 'playlists')
+    } catch (err) {
+      setOpenError((err as Error).message || 'Error al leer los crates de Serato')
     }
   }
 
@@ -100,15 +125,7 @@ export default function App(): JSX.Element {
     setOpenError(null)
     try {
       const result = await window.electronAPI.importSpotifyUrl(urlOrId)
-      setState((s) => ({
-        ...s,
-        sourceFilePath: result.filePath,
-        parseResult: result.parseResult,
-        selectedPlaylists: result.parseResult.playlists,
-        spotifyMatchesByPlaylist: {},
-        pendingExportConfig: null
-      }))
-      go(stayInAutopilot ? 'autopilot' : 'playlists')
+      applyParsedLibrary(result.filePath, result.parseResult, stayInAutopilot ? 'autopilot' : 'playlists')
     } catch (err) {
       const msg = (err as Error).message || 'Error al importar la playlist pública de Spotify'
       if (!stayInAutopilot) setOpenError(msg)
@@ -206,249 +223,310 @@ export default function App(): JSX.Element {
     }
   }
 
-  const currentStepIdx = STEP_LABELS.findIndex((s) => s.id === screen)
+  const hasLibrary = Boolean(state.parseResult && state.parseResult.playlists.length > 0)
+  const hasSelection = state.selectedPlaylists.length > 0
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Unified FZR Booth Top Bar when inside workflow */}
-      {screen !== 'home' && (
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            padding: '10px 20px',
-            background: 'rgba(11, 14, 22, 0.94)',
-            borderBottom: '1px solid var(--border)',
-            backdropFilter: 'blur(16px)'
-          }}
-        >
-          {/* Left: Brand emblem */}
-          <button
-            onClick={() => go('home')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 9,
-              background: 'transparent',
-              border: 'none',
-              padding: 0,
-              color: 'var(--text)'
-            }}
-            title="Volver al inicio"
-          >
-            <FzrEmblem size={26} />
-            <span style={{ fontWeight: 800, letterSpacing: '0.4px', fontSize: 13 }}>
-              FZR <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>DECK</span>
-            </span>
-          </button>
+    <div className={styles.shell}>
+      <div className={styles.body}>
+        {/* Persistent Studio Sidebar — Every Feature Always 1 Click Away */}
+        <aside className={styles.sidebar}>
+          <div className={styles.brandBox}>
+            <FzrEmblem size={34} />
+            <div>
+              <div className={styles.brandTitle}>
+                FZR <span>BOOTH OS</span>
+              </div>
+              <div className={styles.brandSub}>v2.1.0 · DJ Hub Local</div>
+            </div>
+          </div>
 
-          {/* Center: Hardware Transport Stepper */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-            {STEP_LABELS.map((step, idx) => {
-              const isActive = step.id === screen
-              const isDone = idx < currentStepIdx
-              return (
-                <React.Fragment key={step.id}>
+          <div>
+            <div className={styles.navSectionLabel}>Menú principal</div>
+            <nav className={styles.navList}>
+              <button
+                className={`${styles.navItem} ${screen === 'home' ? styles.navItemActive : ''}`}
+                onClick={() => go('home')}
+              >
+                <span
+                  className={styles.navDot}
+                  style={{
+                    background: '#0095ff',
+                    boxShadow: screen === 'home' ? '0 0 10px #0095ff' : 'none'
+                  }}
+                />
+                <div className={styles.navText}>
+                  <div className={styles.navLabelRow}>
+                    <span className={styles.navLabel}>Inicio & Auto-Detectar</span>
+                  </div>
+                  <div className={styles.navDesc}>Rekordbox, Traktor, Serato, URL Spotify</div>
+                </div>
+              </button>
+
+              <button
+                className={`${styles.navItem} ${screen === 'playlists' ? styles.navItemActive : ''}`}
+                disabled={!hasLibrary}
+                onClick={() => go('playlists')}
+                title={!hasLibrary ? 'Carga primero una librería o URL desde Inicio' : undefined}
+              >
+                <span
+                  className={styles.navDot}
+                  style={{
+                    background: '#ff7a1a',
+                    boxShadow: screen === 'playlists' ? '0 0 10px #ff7a1a' : 'none'
+                  }}
+                />
+                <div className={styles.navText}>
+                  <div className={styles.navLabelRow}>
+                    <span className={styles.navLabel}>Playlists & Camelot</span>
+                    {hasLibrary && (
+                      <span className={styles.navBadge}>{state.parseResult!.playlists.length}</span>
+                    )}
+                  </div>
+                  <div className={styles.navDesc}>Rueda Camelot, BPM, limpiar y reparar</div>
+                </div>
+              </button>
+
+              <button
+                className={`${styles.navItem} ${screen === 'export' ? styles.navItemActive : ''}`}
+                disabled={!hasSelection}
+                onClick={() => go('export')}
+                title={!hasSelection ? 'Selecciona al menos 1 playlist para exportar' : undefined}
+              >
+                <span
+                  className={styles.navDot}
+                  style={{
+                    background: '#1db954',
+                    boxShadow: screen === 'export' ? '0 0 10px #1db954' : 'none'
+                  }}
+                />
+                <div className={styles.navText}>
+                  <div className={styles.navLabelRow}>
+                    <span className={styles.navLabel}>Exportar a Cabina</span>
+                    {hasSelection && (
+                      <span className={styles.navBadge} style={{ color: '#46ee82' }}>
+                        {state.selectedPlaylists.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.navDesc}>Traktor NML, RB XML, Spotify, USB, HTML</div>
+                </div>
+              </button>
+
+              <button
+                className={`${styles.navItem} ${screen === 'autopilot' ? styles.navItemAutopilot : ''}`}
+                onClick={() => go('autopilot')}
+              >
+                <span
+                  className={styles.navDot}
+                  style={{
+                    background: '#00d4ff',
+                    boxShadow: '0 0 10px #00d4ff'
+                  }}
+                />
+                <div className={styles.navText}>
+                  <div className={styles.navLabelRow}>
+                    <span className={styles.navLabel}>Soulseek Autopilot</span>
+                    <span
+                      className={styles.navBadge}
+                      style={{
+                        background: 'rgba(0, 212, 255, 0.16)',
+                        color: '#5ce1ff'
+                      }}
+                    >
+                      PRO
+                    </span>
+                  </div>
+                  <div className={styles.navDesc}>FLAC / Hi-Res / 320 · Anti-Ban · Dry-Run</div>
+                </div>
+              </button>
+
+              {state.pendingExportConfig && (
+                <button
+                  className={`${styles.navItem} ${screen === 'review' ? styles.navItemActive : ''}`}
+                  onClick={() => go('review')}
+                >
+                  <span className={styles.navDot} style={{ background: '#1db954' }} />
+                  <div className={styles.navText}>
+                    <div className={styles.navLabel}>Revisión Spotify</div>
+                    <div className={styles.navDesc}>Confirmar matches antes de crear</div>
+                  </div>
+                </button>
+              )}
+
+              {state.exportResults.length > 0 && (
+                <button
+                  className={`${styles.navItem} ${screen === 'results' ? styles.navItemActive : ''}`}
+                  onClick={() => go('results')}
+                >
+                  <span className={styles.navDot} style={{ background: '#46ee82' }} />
+                  <div className={styles.navText}>
+                    <div className={styles.navLabel}>Último resultado</div>
+                    <div className={styles.navDesc}>Abrir archivos e informes</div>
+                  </div>
+                </button>
+              )}
+            </nav>
+          </div>
+
+          {/* Active library card & quick open */}
+          <div className={styles.sidebarFooter}>
+            {state.parseResult ? (
+              <div className={styles.loadedCard}>
+                <div className={styles.loadedLabel}>
                   <span
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '4px 11px',
-                      borderRadius: 999,
-                      fontWeight: isActive ? 700 : 500,
-                      background: isActive
-                        ? 'linear-gradient(135deg, rgba(0,149,255,0.18), rgba(29,185,84,0.18))'
-                        : isDone
-                          ? 'rgba(29, 185, 84, 0.1)'
-                          : 'rgba(255,255,255,0.02)',
-                      color: isActive
-                        ? '#ffffff'
-                        : isDone
-                          ? '#46ee82'
-                          : 'var(--text-muted)',
-                      border: isActive
-                        ? '1px solid rgba(0, 149, 255, 0.45)'
-                        : isDone
-                          ? '1px solid rgba(29, 185, 84, 0.25)'
-                          : '1px solid transparent'
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: '#1db954',
+                      boxShadow: '0 0 8px #1db954'
                     }}
-                  >
-                    <span style={{ fontFamily: 'monospace', opacity: 0.75, fontSize: 10 }}>
-                      {isDone ? '✓' : step.num}
-                    </span>
-                    {step.label}
-                  </span>
-                  {idx < STEP_LABELS.length - 1 && (
-                    <span style={{ color: 'rgba(255,255,255,0.18)' }}>›</span>
-                  )}
-                </React.Fragment>
-              )
-            })}
+                  />
+                  Librería activa
+                </div>
+                <div className={styles.loadedName}>
+                  {state.sourceFilePath?.split(/[\\/]/).pop() ?? 'Librería DJ'}
+                </div>
+                <div className={styles.loadedMeta}>
+                  {state.parseResult.playlists.length} playlist(s) ·{' '}
+                  {state.parseResult.tracks.length.toLocaleString()} tracks
+                </div>
+                <button
+                  className="btn-ghost"
+                  style={{ fontSize: 11, padding: '5px 8px', marginTop: 4 }}
+                  onClick={() => handleOpenDialog('playlists')}
+                >
+                  Cargar otro archivo...
+                </button>
+              </div>
+            ) : (
+              <button
+                className="btn-primary"
+                style={{ width: '100%', fontSize: 12.5, padding: '9px 12px' }}
+                onClick={() => handleOpenDialog('playlists')}
+              >
+                + Cargar librería DJ
+              </button>
+            )}
           </div>
+        </aside>
 
-          {/* Right: Soulseek Autopilot shortcut + Tri-platform LED indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-            <button
-              className="btn-secondary"
-              style={{
-                fontSize: 11,
-                padding: '4px 10px',
-                borderRadius: 999,
-                color: screen === 'autopilot' ? '#ffffff' : '#5ce1ff',
-                borderColor: screen === 'autopilot' ? 'rgba(0,212,255,0.75)' : 'rgba(0,212,255,0.32)',
-                background: screen === 'autopilot' ? 'rgba(0,212,255,0.2)' : undefined
+        {/* Main Workspace Area */}
+        <div className={styles.workspace}>
+          {screen === 'home' && (
+            <HomeScreen
+              djEnv={djEnv}
+              scanningEnv={scanningEnv}
+              onRescanPc={scanPc}
+              onOpenFile={() => handleOpenDialog('playlists')}
+              onDropFile={(fp) => handleLoadPath(fp, 'playlists')}
+              onLoadDetectedFile={(fp) => handleLoadPath(fp, 'playlists')}
+              onLoadSeratoCrates={handleLoadSeratoCrates}
+              onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, false)}
+              onOpenAutopilot={() => go('autopilot')}
+              onOpenPlaylists={hasLibrary ? () => go('playlists') : () => handleOpenDialog('playlists')}
+              errorMessage={openError}
+              onClearError={() => setOpenError(null)}
+            />
+          )}
+
+          {screen === 'playlists' && state.parseResult && (
+            <PlaylistsScreen
+              playlists={state.parseResult.playlists}
+              selectedPlaylists={state.selectedPlaylists}
+              onPlaylistsMutated={(updatedAll, updatedSelected) =>
+                setState((s) => ({
+                  ...s,
+                  parseResult: s.parseResult
+                    ? { ...s.parseResult, playlists: updatedAll }
+                    : s.parseResult,
+                  selectedPlaylists: updatedSelected
+                }))
+              }
+              onSelectionChange={(sel) => setState((s) => ({ ...s, selectedPlaylists: sel }))}
+              onOpenAutopilot={() => go('autopilot')}
+              onContinue={() => go('export')}
+              onBack={() => go('home')}
+            />
+          )}
+
+          {screen === 'export' && (
+            <ExportScreen
+              selectedPlaylists={state.selectedPlaylists}
+              onReviewSpotify={(matchesByPlaylist, config) => {
+                setState((s) => ({
+                  ...s,
+                  spotifyMatchesByPlaylist: matchesByPlaylist,
+                  pendingExportConfig: config
+                }))
+                go('review')
               }}
-              onClick={() => go('autopilot')}
-            >
-              <span className="led-dot" style={{ background: '#00d4ff', boxShadow: '0 0 6px #00d4ff' }} />
-              Soulseek Autopilot
-            </button>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rb-blue)', boxShadow: '0 0 8px var(--rb-blue)' }} />
-            <span>RB</span>
-            <span style={{ opacity: 0.35 }}>⇄</span>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tr-amber)', boxShadow: '0 0 8px var(--tr-amber)' }} />
-            <span>TR</span>
-            <span style={{ opacity: 0.35 }}>→</span>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--sp-green)', boxShadow: '0 0 8px var(--sp-green)' }} />
-            <span>SP</span>
-          </div>
+              onExportDone={async (results) => {
+                await recordHistory(results)
+                setState((s) => ({ ...s, exportResults: results }))
+                go('results')
+              }}
+              onBack={() => go('playlists')}
+            />
+          )}
 
-          {/* Tri-gradient hairline seam */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 1.5,
-              background:
-                'linear-gradient(90deg, transparent 0%, #0095ff 25%, #00d4ff 45%, #ff7a1a 68%, #1db954 88%, transparent 100%)',
-              opacity: 0.55
-            }}
-          />
+          {screen === 'review' && state.pendingExportConfig && (
+            <ReviewScreen
+              playlists={state.selectedPlaylists}
+              initialMatchesByPlaylist={state.spotifyMatchesByPlaylist}
+              exportConfig={state.pendingExportConfig}
+              onBack={() => go('export')}
+              onExportDone={async (results) => {
+                await recordHistory(results)
+                setState((s) => ({ ...s, exportResults: results }))
+                go('results')
+              }}
+            />
+          )}
+
+          {screen === 'results' && (
+            <ResultsScreen
+              exportResults={state.exportResults}
+              onBack={() => go('home')}
+            />
+          )}
+
+          {screen === 'autopilot' && (
+            <AutopilotScreen
+              playlists={
+                state.selectedPlaylists.length > 0
+                  ? state.selectedPlaylists
+                  : state.parseResult?.playlists ?? []
+              }
+              onBack={() => go(state.parseResult ? 'playlists' : 'home')}
+              onLoadFile={() => handleOpenDialog('autopilot')}
+              onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, true)}
+              onApplyDownloadedPaths={handleApplyDownloadedPaths}
+            />
+          )}
         </div>
-      )}
-
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {screen === 'home' && (
-          <HomeScreen
-            onOpenFile={handleOpenDialog}
-            onDropFile={handleDropPath}
-            onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, false)}
-            onOpenAutopilot={() => go('autopilot')}
-            errorMessage={openError}
-            onClearError={() => setOpenError(null)}
-          />
-        )}
-        {screen === 'import' && state.parseResult && (
-          <ImportScreen
-            filePath={state.sourceFilePath!}
-            parseResult={state.parseResult}
-            onContinue={() => go('playlists')}
-            onBack={() => go('home')}
-          />
-        )}
-        {screen === 'playlists' && state.parseResult && (
-          <PlaylistsScreen
-            playlists={state.parseResult.playlists}
-            selectedPlaylists={state.selectedPlaylists}
-            onPlaylistsMutated={(updatedAll, updatedSelected) =>
-              setState((s) => ({
-                ...s,
-                parseResult: s.parseResult
-                  ? { ...s.parseResult, playlists: updatedAll }
-                  : s.parseResult,
-                selectedPlaylists: updatedSelected
-              }))
-            }
-            onSelectionChange={(sel) => setState((s) => ({ ...s, selectedPlaylists: sel }))}
-            onOpenAutopilot={() => go('autopilot')}
-            onContinue={() => go('export')}
-            onBack={() => go('import')}
-          />
-        )}
-        {screen === 'export' && (
-          <ExportScreen
-            selectedPlaylists={state.selectedPlaylists}
-            onReviewSpotify={(matchesByPlaylist, config) => {
-              setState((s) => ({
-                ...s,
-                spotifyMatchesByPlaylist: matchesByPlaylist,
-                pendingExportConfig: config
-              }))
-              go('review')
-            }}
-            onExportDone={async (results) => {
-              await recordHistory(results)
-              setState((s) => ({ ...s, exportResults: results }))
-              go('results')
-            }}
-            onBack={() => go('playlists')}
-          />
-        )}
-        {screen === 'review' && state.pendingExportConfig && (
-          <ReviewScreen
-            playlists={state.selectedPlaylists}
-            initialMatchesByPlaylist={state.spotifyMatchesByPlaylist}
-            exportConfig={state.pendingExportConfig}
-            onBack={() => go('export')}
-            onExportDone={async (results) => {
-              await recordHistory(results)
-              setState((s) => ({ ...s, exportResults: results }))
-              go('results')
-            }}
-          />
-        )}
-        {screen === 'results' && (
-          <ResultsScreen
-            exportResults={state.exportResults}
-            onBack={() => go('home')}
-          />
-        )}
-        {screen === 'autopilot' && (
-          <AutopilotScreen
-            playlists={
-              state.selectedPlaylists.length > 0
-                ? state.selectedPlaylists
-                : state.parseResult?.playlists ?? []
-            }
-            onBack={() => go(state.parseResult ? 'playlists' : 'home')}
-            onLoadFile={handleOpenDialog}
-            onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, true)}
-            onApplyDownloadedPaths={handleApplyDownloadedPaths}
-          />
-        )}
       </div>
 
-      {/* Persistent Traktor/Rekordbox Hardware Footer Status Bar */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '6px 18px',
-          background: '#080a10',
-          borderTop: '1px solid var(--border)',
-          fontFamily: 'monospace',
-          fontSize: 10.5,
-          color: 'var(--text-muted)',
-          flexShrink: 0
-        }}
-      >
+      {/* Persistent Studio Status Footer */}
+      <div className={styles.statusBar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#46ee82', fontWeight: 700 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#1db954', boxShadow: '0 0 8px #1db954' }} />
-            ENGINE READY
+            FZR BOOTH OS READY
           </span>
-          {state.sourceFilePath && (
-            <span style={{ color: '#8cd0ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 320 }}>
-              · {state.sourceFilePath.split(/[\\/]/).pop()}
-              {state.parseResult ? ` (${state.parseResult.tracks.length} tracks · ${state.parseResult.playlists.length} pl)` : ''}
+          {djEnv && (
+            <span style={{ color: 'var(--text-muted)' }}>
+              · Detectado:{' '}
+              {[
+                djEnv.rekordbox.installed && 'Rekordbox',
+                djEnv.traktor.installed && 'Traktor',
+                djEnv.serato.installed && 'Serato',
+                djEnv.virtualdj.installed && 'VirtualDJ',
+                'Soulseek Nativo'
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
           )}
         </div>
@@ -456,8 +534,8 @@ export default function App(): JSX.Element {
         <MiniRgbWaveform bars={22} height={12} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <span>100% LOCAL · SOULSEEK AUTOPILOT</span>
-          <span style={{ color: 'var(--text)', fontWeight: 700 }}>v2.0.0</span>
+          <span>100% LOCAL · ZERO UPLOAD</span>
+          <span style={{ color: '#fff', fontWeight: 700 }}>v2.1.0</span>
         </div>
       </div>
     </div>

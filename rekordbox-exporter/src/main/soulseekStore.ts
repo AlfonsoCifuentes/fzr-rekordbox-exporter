@@ -26,6 +26,10 @@ function getStatePath(): string {
 
 function getDefaultDownloadDir(): string {
   try {
+    const slskComplete = join(app.getPath('documents'), 'Soulseek Downloads', 'complete')
+    if (existsSync(slskComplete)) return slskComplete
+    const slskDocs = join(app.getPath('documents'), 'Soulseek Downloads')
+    if (existsSync(slskDocs)) return slskDocs
     return join(app.getPath('music'), 'FZR Soulseek Downloads')
   } catch {
     return join(app.getPath('documents'), 'FZR Soulseek Downloads')
