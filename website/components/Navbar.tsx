@@ -1,16 +1,35 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLocale } from "./LocaleContext";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { locale, toggleLocale } = useLocale();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const links =
+    locale === "es"
+      ? [
+          ["Conversor Online", "#online-tool"],
+          ["Características", "#features"],
+          ["Cómo funciona", "#how-it-works"],
+          ["Compatibilidad", "#compatibility"],
+          ["FAQ", "#faq"],
+        ]
+      : [
+          ["Online Tool", "#online-tool"],
+          ["Features", "#features"],
+          ["How it works", "#how-it-works"],
+          ["Compatibility", "#compatibility"],
+          ["FAQ", "#faq"],
+        ];
 
   return (
     <nav
@@ -39,12 +58,8 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-7 text-sm">
-          {[
-            ["Features", "#features"],
-            ["How it works", "#how-it-works"],
-            ["Compatibility", "#compatibility"],
-          ].map(([label, href]) => (
+        <div className="hidden md:flex items-center gap-6 text-sm">
+          {links.map(([label, href]) => (
             <Link
               key={label}
               href={href}
@@ -54,44 +69,60 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="px-2.5 py-1 rounded-full text-xs font-semibold glass hover:border-white/25 transition-colors cursor-pointer"
+            style={{ color: "var(--text-primary)" }}
+            aria-label="Switch language"
+          >
+            {locale === "en" ? "ES" : "EN"}
+          </button>
           <Link
             href="#download"
-            className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200"
+            className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 hover:brightness-110"
             style={{
               background: "var(--spotify-green)",
               color: "#000",
             }}
           >
-            Download
+            {locale === "es" ? "Descargar" : "Download"}
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden flex flex-col gap-1 p-2"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <span
-            className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-1.5" : ""}`}
-          />
-          <span
-            className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
-          />
-          <span
-            className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
-          />
-        </button>
+        {/* Mobile controls */}
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="px-2.5 py-1 rounded-full text-xs font-semibold glass"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {locale === "en" ? "ES" : "EN"}
+          </button>
+          <button
+            type="button"
+            className="flex flex-col gap-1 p-2"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span
+              className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-1.5" : ""}`}
+            />
+            <span
+              className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
+            />
+            <span
+              className={`block h-0.5 w-5 bg-white transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden glass mt-2 mx-4 rounded-xl p-4 flex flex-col gap-3">
-          {[
-            ["Features", "#features"],
-            ["How it works", "#how-it-works"],
-            ["Compatibility", "#compatibility"],
-          ].map(([label, href]) => (
+          {links.map(([label, href]) => (
             <Link
               key={label}
               href={href}
@@ -108,7 +139,7 @@ export default function Navbar() {
             style={{ background: "var(--spotify-green)", color: "#000" }}
             onClick={() => setMenuOpen(false)}
           >
-            Download
+            {locale === "es" ? "Descargar" : "Download"}
           </Link>
         </div>
       )}

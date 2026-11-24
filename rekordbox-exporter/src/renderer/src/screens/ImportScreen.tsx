@@ -15,9 +15,11 @@ export default function ImportScreen({ filePath, parseResult, onContinue, onBack
   const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
   const formatLabels: Record<string, string> = {
     xml: 'Rekordbox XML',
+    nml: 'Traktor Pro NML',
     m3u8: 'Playlist M3U8',
     m3u: 'Playlist M3U',
-    txt: 'Texto Rekordbox (TXT)'
+    txt: 'Texto Rekordbox (TXT)',
+    csv: 'CSV Streaming (Exportify / Soundiiz)'
   }
   const formatLabel = formatLabels[ext] ?? ext.toUpperCase()
 

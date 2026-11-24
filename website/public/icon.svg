@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="fzrGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#005bff"/>
+      <stop offset="50%" stop-color="#e8eaf0"/>
+      <stop offset="100%" stop-color="#1db954"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#0a0b0e"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" stroke="url(#fzrGrad)" stroke-width="2.5" stroke-opacity="0.7"/>
+  <path d="M16 42V22h11v4h-6.5v4.5H26v4h-5.5V42H16zm13.5 0l8-16h-7.5v-4h13.5v3.5l-8 16.5h-6zm16 0V22h7.5c4 0 6.5 2.2 6.5 5.8 0 2.5-1.3 4.3-3.4 5.1L60 42h-5l-3.4-8.3H50V42h-4.5zm4.5-12h2.6c1.6 0 2.5-.8 2.5-2.1 0-1.4-.9-2.1-2.5-2.1H50V30z" fill="url(#fzrGrad)"/>
+</svg>

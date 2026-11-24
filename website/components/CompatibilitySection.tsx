@@ -1,41 +1,63 @@
-const brands = [
-  {
-    name: "Rekordbox",
-    logo: "RB",
-    color: "var(--rekordbox-blue)",
-    description: "Pioneer DJ's flagship library management software",
-    formats: ["XML Collection", "M3U8 Playlist", "M3U Playlist", "TXT Export"],
-    version: "Rekordbox 5, 6 & 7",
-    status: "import",
-  },
-  {
-    name: "Traktor",
-    logo: "TR",
-    color: "var(--traktor-white)",
-    description: "Native Instruments' professional DJ software",
-    formats: ["NML Collection", "M3U8 Playlist"],
-    version: "Traktor 3.x",
-    status: "export",
-  },
-  {
-    name: "Spotify",
-    logo: "SP",
-    color: "var(--spotify-green)",
-    description: "The world's largest music streaming platform",
-    formats: ["Public Playlists", "Private Playlists"],
-    version: "Spotify API v1",
-    status: "export",
-  },
-];
+"use client";
+import { useLocale } from "./LocaleContext";
 
 export default function CompatibilitySection() {
+  const { locale } = useLocale();
+
+  const brands = [
+    {
+      name: "Rekordbox",
+      logo: "RB",
+      color: "var(--rekordbox-blue)",
+      description:
+        locale === "es"
+          ? "Software de gestión de librería de Pioneer DJ / AlphaTheta"
+          : "Pioneer DJ / AlphaTheta's flagship library software",
+      formats:
+        locale === "es"
+          ? ["XML Collection (con Cues y Carpetas)", "Playlist M3U8 / M3U", "Exportación TXT (UTF-16 / UTF-8)"]
+          : ["XML Collection (with Cues & Folders)", "M3U8 / M3U Playlist", "TXT Export (UTF-16 / UTF-8)"],
+      version: "Rekordbox 5, 6 & 7",
+      status: "both" as const,
+    },
+    {
+      name: "Traktor Pro",
+      logo: "TR",
+      color: "var(--traktor-white)",
+      description:
+        locale === "es"
+          ? "Software profesional para DJs de Native Instruments"
+          : "Native Instruments' professional DJ software",
+      formats:
+        locale === "es"
+          ? ["NML v19 (BPM, Open Key, CUE_V2)", "Playlist M3U8 (absoluta o relativa)", "Copia portable de archivos de audio"]
+          : ["NML v19 (BPM, Open Key, CUE_V2)", "M3U8 Playlist (absolute or relative)", "Portable USB audio file copy"],
+      version: "Traktor Pro 3 & 4",
+      status: "both" as const,
+    },
+    {
+      name: "Spotify",
+      logo: "SP",
+      color: "var(--spotify-green)",
+      description:
+        locale === "es"
+          ? "Creación directa vía OAuth PKCE o exportación rápida .txt"
+          : "Direct creation via OAuth PKCE or quick .txt export",
+      formats:
+        locale === "es"
+          ? ["Playlists Públicas y Privadas", "Revisión manual de matches", "Lista .txt para Soundiiz / TuneMyMusic"]
+          : ["Public & Private Playlists", "Manual track match review", ".txt list for Soundiiz / TuneMyMusic"],
+      version: "Spotify Web API v1 (PKCE)",
+      status: "export" as const,
+    },
+  ];
+
   return (
     <section
       id="compatibility"
       className="py-24 relative"
       style={{ background: "var(--bg-elevated)" }}
     >
-      {/* Top divider */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
@@ -51,14 +73,23 @@ export default function CompatibilitySection() {
             className="text-xs font-semibold tracking-widest uppercase mb-4"
             style={{ color: "var(--traktor-white)" }}
           >
-            Compatibility
+            {locale === "es" ? "Compatibilidad" : "Compatibility"}
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight">
-            Three universes,{" "}
-            <span className="gradient-text">one bridge</span>
+            {locale === "es" ? (
+              <>
+                Tres universos, <span className="gradient-text">un puente</span>
+              </>
+            ) : (
+              <>
+                Three universes, <span className="gradient-text">one bridge</span>
+              </>
+            )}
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
-            FZR Rekordbox Exporter speaks the native language of each platform.
+            {locale === "es"
+              ? "FZR Rekordbox Exporter habla el formato nativo de cada plataforma."
+              : "FZR Rekordbox Exporter speaks the native format of each platform."}
           </p>
         </div>
 
@@ -69,7 +100,6 @@ export default function CompatibilitySection() {
               className="glass rounded-2xl p-7 flex flex-col gap-5 hover:scale-[1.01] transition-all duration-200"
               style={{ borderColor: `${brand.color}22` }}
             >
-              {/* Header */}
               <div className="flex items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center font-black text-lg"
@@ -89,13 +119,19 @@ export default function CompatibilitySection() {
                     className="text-xs px-2 py-0.5 rounded-full font-semibold"
                     style={{
                       background:
-                        brand.status === "import"
-                          ? "rgba(0,91,255,0.15)"
+                        brand.status === "both"
+                          ? "rgba(0,91,255,0.16)"
                           : "rgba(29,185,84,0.15)",
-                      color: brand.status === "import" ? "var(--rekordbox-blue)" : "var(--spotify-green)",
+                      color: brand.status === "both" ? "#7bb0ff" : "var(--spotify-green)",
                     }}
                   >
-                    {brand.status === "import" ? "↑ Import" : "↓ Export"}
+                    {brand.status === "both"
+                      ? locale === "es"
+                        ? "⇅ Entrada y Salida"
+                        : "⇅ Import & Export"
+                      : locale === "es"
+                        ? "↓ Salida"
+                        : "↓ Export"}
                   </span>
                 </div>
               </div>
@@ -106,7 +142,7 @@ export default function CompatibilitySection() {
 
               <div>
                 <p className="text-xs font-semibold mb-2" style={{ color: "var(--text-subtle)" }}>
-                  SUPPORTED FORMATS
+                  {locale === "es" ? "FORMATOS SOPORTADOS" : "SUPPORTED FORMATS"}
                 </p>
                 <ul className="flex flex-col gap-1.5">
                   {brand.formats.map((fmt) => (

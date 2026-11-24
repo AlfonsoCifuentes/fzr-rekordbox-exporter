@@ -1,15 +1,18 @@
-const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
+"use client";
+import { useLocale } from "./LocaleContext";
+import { GITHUB_REPO } from "./useLatestRelease";
 
 export default function Footer() {
+  const { locale } = useLocale();
+
   return (
     <footer
       className="relative border-t py-12"
       style={{
-        background: "var(--bg-elevated)",
+        background: "var(--bg-base)",
         borderColor: "rgba(255,255,255,0.05)",
       }}
     >
-      {/* Top gradient line */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
@@ -21,7 +24,6 @@ export default function Footer() {
 
       <div className="max-w-6xl mx-auto px-5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Brand */}
           <div className="flex flex-col items-center md:items-start gap-1">
             <span
               className="text-xl font-black tracking-tight"
@@ -36,11 +38,12 @@ export default function Footer() {
               FZR Rekordbox Exporter
             </span>
             <p className="text-xs" style={{ color: "var(--text-subtle)" }}>
-              Free & Open Source · MIT License
+              {locale === "es"
+                ? "Gratis y Open Source · Licencia MIT · Alojado en Cloudflare"
+                : "Free & Open Source · MIT License · Hosted on Cloudflare"}
             </p>
           </div>
 
-          {/* Links */}
           <div className="flex items-center gap-6 text-sm" style={{ color: "var(--text-muted)" }}>
             <a
               href={GITHUB_REPO}
@@ -65,24 +68,22 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="hover:text-white transition-colors"
             >
-              Report a bug
+              {locale === "es" ? "Reportar fallo" : "Report a bug"}
             </a>
           </div>
         </div>
 
-        {/* Disclaimer */}
         <div
           className="mt-8 pt-6 border-t text-center text-xs leading-relaxed"
           style={{ borderColor: "rgba(255,255,255,0.05)", color: "var(--text-subtle)" }}
         >
           <p>
             FZR Rekordbox Exporter is an independent open-source project and is not affiliated with,
-            endorsed by, or connected to Pioneer DJ, Native Instruments, or Spotify AB.
+            endorsed by, or connected to Pioneer DJ / AlphaTheta, Native Instruments, or Spotify AB.
           </p>
           <p className="mt-1">
-            Rekordbox® is a trademark of Pioneer DJ Corporation.
-            Traktor® is a trademark of Native Instruments GmbH.
-            Spotify® is a trademark of Spotify AB.
+            Rekordbox® is a trademark of AlphaTheta Corporation. Traktor® is a trademark of Native
+            Instruments GmbH. Spotify® is a trademark of Spotify AB.
           </p>
         </div>
       </div>

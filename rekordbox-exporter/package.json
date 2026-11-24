@@ -1,6 +1,6 @@
 {
   "name": "rekordbox-exporter",
-  "version": "1.1.0",
+  "version": "1.4.0",
   "description": "Export Rekordbox playlists to Spotify and Traktor",
   "productName": "FZR Rekordbox Exporter",
   "main": "out/main/index.js",
@@ -9,6 +9,7 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "electron:dev": "electron-vite dev",
+    "typecheck": "tsc --noEmit",
     "package": "electron-builder",
     "dist": "electron-vite build && electron-builder --publish never",
     "test": "vitest run",
@@ -36,17 +37,14 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
-    "@types/better-sqlite3": "^7.6.11",
-    "better-sqlite3": "^11.0.0",
     "fast-xml-parser": "^4.4.0",
-    "fuse.js": "^7.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "build": {
     "appId": "com.fzr.rekordbox-exporter",
     "productName": "FZR Rekordbox Exporter",
-    "copyright": "Copyright © 2024 FZR",
+    "copyright": "Copyright © 2026 FZR",
     "directories": {
       "output": "release",
       "buildResources": "build-resources"

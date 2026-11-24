@@ -1,24 +1,23 @@
 import { XMLParser } from 'fast-xml-parser'
-import type { ParseResult, Track, Playlist } from '../common/types'
-import { normalizeText } from '../common/normalizeText'
 import { randomUUID } from 'crypto'
+import type { ParseResult, Track, Playlist, CuePoint } from '../common/types'
+import { normalizeText } from '../common/normalizeText'
+import { decodeFileUri, stripBom } from '../common/filePaths'
 
 // ---- Types mirroring Rekordbox XML structure ----------------------------
-// Using no attributeNamePrefix so attributes are accessed directly by name.
 
-type RbTrackAttr = Record<string, string | number | undefined>
+type RbPositionMark = Record<string, string | undefined>
+type RbTrackAttr = Record<string, string | RbPositionMark | RbPositionMark[] | undefined>
 
 interface RbNode {
-  Name: string
-  Type: string | number // 0 = folder, 1 = playlist
-  Count?: number
-  Entries?: number
-  KeyType?: number
-  TRACK?: Array<{ Key: string | number }> | { Key: string | number }
-  NODE?: RbNodeArray
+  Name?: string
+  Type?: string
+  Count?: string
+  Entries?: string
+  KeyType?: string
+  TRACK?: Array<{ Key?: string }> | { Key?: string }
+  NODE?: RbNode | RbNode[]
 }
-
-type RbNodeArray = RbNode | RbNode[]
 
 // ---- Helpers -------------------------------------------------------------
 
@@ -27,22 +26,39 @@ function toArray<T>(val: T | T[] | undefined): T[] {
   return Array.isArray(val) ? val : [val]
 }
 
-/**
- * Convert Rekordbox Location URI to a local file path.
- * Rekordbox stores paths as file:///Volumes/... on Mac or
- * file:///C:/... on Windows.
- */
-function locationToPath(location: string | undefined): string | undefined {
-  if (!location) return undefined
-  try {
-    // Replace file:// with nothing and decode URI
-    const raw = location.replace(/^file:\/\//, '')
-    const decoded = decodeURIComponent(raw)
-    // On Windows, remove leading slash before drive letter: /C:/Music -> C:/Music
-    return decoded.replace(/^\/([A-Za-z]:)/, '$1')
-  } catch {
-    return location
+function parseNumberAttr(val: unknown): number | undefined {
+  if (val === undefined || val === null || val === '') return undefined
+  const n = Number(val)
+  return Number.isFinite(n) ? n : undefined
+}
+
+function parseCuePoints(rawMarks: unknown): CuePoint[] | undefined {
+  const marks = toArray(rawMarks as RbPositionMark | RbPositionMark[] | undefined)
+  if (marks.length === 0) return undefined
+
+  const cues: CuePoint[] = []
+  for (const m of marks) {
+    const startSec = parseNumberAttr(m['Start'])
+    if (startSec === undefined) continue
+
+    const endSec = parseNumberAttr(m['End'])
+    const type = parseNumberAttr(m['Type']) ?? 0
+    const num = parseNumberAttr(m['Num'])
+    const r = parseNumberAttr(m['Red'])
+    const g = parseNumberAttr(m['Green'])
+    const b = parseNumberAttr(m['Blue'])
+
+    cues.push({
+      name: m['Name'] ? String(m['Name']) : undefined,
+      type,
+      startMs: Math.round(startSec * 1000),
+      endMs: endSec !== undefined ? Math.round(endSec * 1000) : undefined,
+      hotCueIndex: num !== undefined ? num : -1,
+      color: r !== undefined && g !== undefined && b !== undefined ? { r, g, b } : undefined
+    })
   }
+
+  return cues.length > 0 ? cues : undefined
 }
 
 // ---- Playlist node walker ------------------------------------------------
@@ -50,27 +66,40 @@ function locationToPath(location: string | undefined): string | undefined {
 function walkNode(
   node: RbNode,
   parentPath: string[],
-  trackIndex: Map<string, Track>,
+  trackById: Map<string, Track>,
+  trackByLocation: Map<string, Track>,
   playlists: Playlist[],
   warnings: string[]
 ): void {
   const name = node['Name'] ?? 'Unnamed'
   const type = Number(node['Type'])
+  const keyType = Number(node['KeyType'] ?? 0) // 0 = TrackID, 1 = Location URI
   const currentPath = [...parentPath, name]
 
   if (type === 0) {
     // Folder — recurse into children
     const children = toArray(node.NODE)
     for (const child of children) {
-      walkNode(child, currentPath, trackIndex, playlists, warnings)
+      walkNode(child, currentPath, trackById, trackByLocation, playlists, warnings)
     }
   } else if (type === 1) {
-    // Playlist — collect tracks
+    // Playlist — collect tracks in original order
     const trackRefs = toArray(node.TRACK)
     const tracks: Track[] = []
     for (const ref of trackRefs) {
-      const key = String(ref['Key'])
-      const track = trackIndex.get(key)
+      const key = String(ref['Key'] ?? '')
+      let track: Track | undefined
+
+      if (keyType === 1) {
+        // Key is Location URI
+        const decodedKey = decodeFileUri(key)
+        track =
+          trackByLocation.get(key) ??
+          (decodedKey ? trackByLocation.get(decodedKey.toLowerCase()) : undefined)
+      } else {
+        track = trackById.get(key)
+      }
+
       if (track) {
         tracks.push(track)
       } else {
@@ -90,17 +119,20 @@ function walkNode(
 
 export function parseRekordboxXml(xmlContent: string): ParseResult {
   const warnings: string[] = []
+  const cleanedXml = stripBom(xmlContent)
 
-  // 1. Parse XML
+  // 1. Parse XML (parseAttributeValue: false prevents corrupting numeric titles like "1999" or IDs like "001")
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    isArray: (name) => ['NODE', 'TRACK'].includes(name)
+    parseAttributeValue: false,
+    parseTagValue: false,
+    isArray: (name) => ['NODE', 'TRACK', 'POSITION_MARK'].includes(name)
   })
 
   let parsed: Record<string, unknown>
   try {
-    parsed = parser.parse(xmlContent)
+    parsed = parser.parse(cleanedXml)
   } catch (err) {
     throw new Error(`XML inválido: ${(err as Error).message}`)
   }
@@ -125,7 +157,8 @@ export function parseRekordboxXml(xmlContent: string): ParseResult {
     warnings.push('La colección no contiene tracks')
   }
 
-  const trackIndex = new Map<string, Track>()
+  const trackById = new Map<string, Track>()
+  const trackByLocation = new Map<string, Track>()
   const tracks: Track[] = []
 
   for (const rt of rawTracks) {
@@ -140,34 +173,43 @@ export function parseRekordboxXml(xmlContent: string): ParseResult {
       warnings.push(`Track ID ${id} ("${name}"): sin artista`)
     }
 
-    const location = locationToPath(rt['Location'] as string | undefined)
+    const rawLocation = rt['Location'] as string | undefined
+    const location = decodeFileUri(rawLocation)
     if (!location) {
       warnings.push(`Track ID ${id} ("${name}"): sin ruta de archivo`)
     }
 
+    const bitrateRaw = rt['BitRate'] ?? rt['Bitrate']
+    const cuePoints = parseCuePoints(rt['POSITION_MARK'])
+
     const track: Track = {
       internalId: randomUUID(),
-      rekordboxTrackId: id,
-      name: normalizeText(name) !== '' ? name : '(sin título)',
-      artist: artist || '(artista desconocido)',
+      rekordboxTrackId: id || undefined,
+      name: normalizeText(name) !== '' ? name : name.trim() || '(sin título)',
+      artist: artist.trim() || '(artista desconocido)',
       album: rt['Album'] ? String(rt['Album']) : undefined,
       remixer: rt['Remixer'] ? String(rt['Remixer']) : undefined,
       mix: rt['Mix'] ? String(rt['Mix']) : undefined,
       genre: rt['Genre'] ? String(rt['Genre']) : undefined,
-      year: rt['Year'] ? Number(rt['Year']) : undefined,
-      bpm: rt['AverageBpm'] ? Number(rt['AverageBpm']) : undefined,
+      label: rt['Label'] ? String(rt['Label']) : undefined,
+      composer: rt['Composer'] ? String(rt['Composer']) : undefined,
+      year: parseNumberAttr(rt['Year']),
+      bpm: parseNumberAttr(rt['AverageBpm']),
       key: rt['Tonality'] ? String(rt['Tonality']) : undefined,
-      durationSeconds: rt['TotalTime'] ? Number(rt['TotalTime']) : undefined,
+      durationSeconds: parseNumberAttr(rt['TotalTime']),
       location,
       comments: rt['Comments'] ? String(rt['Comments']) : undefined,
-      rating: rt['Rating'] ? Number(rt['Rating']) : undefined,
+      rating: parseNumberAttr(rt['Rating']),
       dateAdded: rt['DateAdded'] ? String(rt['DateAdded']) : undefined,
-      fileSize: rt['Size'] ? Number(rt['Size']) : undefined,
-      bitrate: rt['BitRate'] ? Number(rt['BitRate']) : undefined,
-      sampleRate: rt['SampleRate'] ? Number(rt['SampleRate']) : undefined
+      fileSize: parseNumberAttr(rt['Size']),
+      bitrate: parseNumberAttr(bitrateRaw),
+      sampleRate: parseNumberAttr(rt['SampleRate']),
+      cuePoints
     }
 
-    trackIndex.set(id, track)
+    if (id) trackById.set(id, track)
+    if (rawLocation) trackByLocation.set(rawLocation, track)
+    if (location) trackByLocation.set(location.toLowerCase(), track)
     tracks.push(track)
   }
 
@@ -187,7 +229,7 @@ export function parseRekordboxXml(xmlContent: string): ParseResult {
   const playlists: Playlist[] = []
   const rootNodes = toArray(rootNode)
   for (const node of rootNodes) {
-    walkNode(node, [], trackIndex, playlists, warnings)
+    walkNode(node, [], trackById, trackByLocation, playlists, warnings)
   }
 
   if (playlists.length === 0) {

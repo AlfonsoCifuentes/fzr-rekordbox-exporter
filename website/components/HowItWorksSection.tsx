@@ -1,47 +1,96 @@
-const steps = [
+"use client";
+import { useLocale } from "./LocaleContext";
+
+const stepsEn = [
   {
     number: "01",
     title: "Export from Rekordbox",
     description:
-      "In Rekordbox go to File → Export Collection in xml format, or export your playlist as M3U8 or TXT.",
+      "In Rekordbox go to File → Export Collection in rekordbox xml format, or right-click any playlist and export as M3U8 or TXT.",
     accent: "var(--rekordbox-blue)",
-    detail: "Supports XML · M3U8 · M3U · TXT",
+    detail: "XML · M3U8 · M3U · TXT (UTF-16)",
   },
   {
     number: "02",
-    title: "Open in FZR Exporter",
+    title: "Drag & drop into FZR Exporter",
     description:
-      "Launch FZR Rekordbox Exporter, click «Importar exportación de Rekordbox» and select your file.",
+      "Drop your file directly onto FZR Rekordbox Exporter. Format, encoding, folders, BPM, musical keys, and Hot Cues are parsed automatically.",
     accent: "var(--traktor-white)",
-    detail: "All formats auto-detected",
+    detail: "Auto-detected format & encoding",
   },
   {
     number: "03",
-    title: "Select playlists",
+    title: "Inspect & select playlists",
     description:
-      "Browse your full playlist tree, select the playlists or folders you want to export, and apply filters.",
+      "Filter your playlist tree, preview tracks with BPM/Key/Cue counts, and spot missing local audio paths before exporting.",
     accent: "var(--rekordbox-blue)",
-    detail: "Folder-aware hierarchy",
+    detail: "Live track preview & disk check",
   },
   {
     number: "04",
-    title: "Choose export format",
+    title: "Review Spotify matches & choose formats",
     description:
-      "Pick Traktor NML, M3U8 playlist, or Spotify. Toggle report generation for a per-track CSV/JSON log.",
+      "Pick Traktor NML v19, M3U8 (absolute or relative), portable audio copy, or Spotify. Review ambiguous Spotify tracks manually before creation.",
     accent: "var(--traktor-white)",
-    detail: "NML · M3U8 · Spotify · CSV · JSON",
+    detail: "NML v19 · M3U8 · Spotify · CSV · JSON",
   },
   {
     number: "05",
-    title: "Done",
+    title: "Done — ready for the booth",
     description:
-      "Your playlists are exported in seconds. Open the output folder or check the report for any unmatched tracks.",
+      "Open the generated folder, import directly into Traktor Pro, or launch your new Spotify playlist with full unmatched track reports.",
     accent: "var(--spotify-green)",
-    detail: "Instant results",
+    detail: "Zero friction results",
+  },
+];
+
+const stepsEs = [
+  {
+    number: "01",
+    title: "Exporta desde Rekordbox",
+    description:
+      "En Rekordbox ve a File → Export Collection in rekordbox xml format, o haz clic derecho en una playlist para exportar en M3U8 o TXT.",
+    accent: "var(--rekordbox-blue)",
+    detail: "XML · M3U8 · M3U · TXT (UTF-16)",
+  },
+  {
+    number: "02",
+    title: "Arrastra y suelta en FZR Exporter",
+    description:
+      "Suelta tu archivo directamente sobre la ventana. Detectamos formato, codificación, carpetas, BPM, tonalidad y Hot Cues automáticamente.",
+    accent: "var(--traktor-white)",
+    detail: "Detección automática",
+  },
+  {
+    number: "03",
+    title: "Previsualiza y elige playlists",
+    description:
+      "Filtra tus playlists por nombre o carpeta, inspecciona pistas con BPM/Key/Cues y verifica qué archivos existen en disco.",
+    accent: "var(--rekordbox-blue)",
+    detail: "Vista previa y control de rutas",
+  },
+  {
+    number: "04",
+    title: "Revisa Spotify y elige formatos",
+    description:
+      "Selecciona Traktor NML v19, M3U8 (absoluto o relativo), copia de audio portable o Spotify. Corrige temas dudosos en Spotify antes de crear la playlist.",
+    accent: "var(--traktor-white)",
+    detail: "NML v19 · M3U8 · Spotify · CSV · JSON",
+  },
+  {
+    number: "05",
+    title: "Listo para la cabina",
+    description:
+      "Abre la carpeta generada para importar en Traktor Pro o abre tu nueva playlist de Spotify con informe completo de temas no encontrados.",
+    accent: "var(--spotify-green)",
+    detail: "Resultados al instante",
   },
 ];
 
 export default function HowItWorksSection() {
+  const { locale } = useLocale();
+  const steps = locale === "es" ? stepsEs : stepsEn;
+
   return (
     <section
       id="how-it-works"
@@ -54,19 +103,19 @@ export default function HowItWorksSection() {
             className="text-xs font-semibold tracking-widest uppercase mb-4"
             style={{ color: "var(--rekordbox-blue)" }}
           >
-            How it works
+            {locale === "es" ? "Cómo funciona" : "How it works"}
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight">
-            Five steps, zero friction
+            {locale === "es" ? "Cinco pasos, cero fricción" : "Five steps, zero friction"}
           </h2>
           <p className="text-base max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
-            No accounts. No subscriptions. No cloud. Just your files and your music.
+            {locale === "es"
+              ? "Sin suscripciones. Sin subir tu música a la nube. Solo tus archivos y tus playlists."
+              : "No subscriptions. No cloud uploads. Just your files and your music."}
           </p>
         </div>
 
-        {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
           <div
             className="absolute left-5 top-0 bottom-0 w-px hidden md:block"
             style={{
@@ -82,7 +131,6 @@ export default function HowItWorksSection() {
                 key={step.number}
                 className="flex flex-col md:flex-row gap-4 md:gap-8 items-start md:items-center group"
               >
-                {/* Number bubble */}
                 <div
                   className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0 transition-all duration-300 group-hover:scale-110"
                   style={{
@@ -95,7 +143,6 @@ export default function HowItWorksSection() {
                   {i + 1}
                 </div>
 
-                {/* Content */}
                 <div className="glass rounded-2xl p-5 flex-1 group-hover:border-white/10 transition-all duration-200">
                   <div className="flex flex-wrap items-center gap-3 mb-2">
                     <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>

@@ -1,26 +1,24 @@
 import { randomUUID } from 'crypto'
 import type { ParseResult, Track, Playlist } from '../common/types'
+import { decodeFileUri, stripBom } from '../common/filePaths'
 
 /**
- * Parse an M3U8 file exported from Rekordbox.
+ * Parse an M3U8 / M3U file exported from Rekordbox.
  *
  * Rekordbox M3U8 format:
  *   #EXTM3U
  *   #EXTINF:360,Artist Name - Track Title
  *   C:\Music\Artist\Track.mp3
  *
- * Some versions include extra tags between EXTINF and the path:
- *   #EXTALB:Album Name
- *   #EXTGENRE:Techno
- *
- * The playlist name is derived from the filename (passed as `sourceFileName`).
+ * Also handles UTF-8 BOM, #EXTALB, #EXTGENRE, and file:// / file://localhost/ URIs.
  */
 export function parseRekordboxM3u8(
   content: string,
   sourceFileName: string
 ): ParseResult {
   const warnings: string[] = []
-  const lines = content
+  const cleaned = stripBom(content)
+  const lines = cleaned
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l.length > 0)
@@ -41,16 +39,14 @@ export function parseRekordboxM3u8(
     }
 
     if (line.startsWith('#PLAYLIST:')) {
-      // Some exports include a playlist name tag — ignore, we use filename
       continue
     }
 
     if (line.startsWith('#EXTINF:')) {
-      // #EXTINF:duration,DisplayName
       const rest = line.slice('#EXTINF:'.length)
       const commaIdx = rest.indexOf(',')
       if (commaIdx >= 0) {
-        const durStr = rest.slice(0, commaIdx)
+        const durStr = rest.slice(0, commaIdx).trim()
         const dur = parseFloat(durStr)
         // Rekordbox uses -1 for unknown duration
         pendingDuration = isNaN(dur) || dur < 0 ? undefined : dur
@@ -70,12 +66,11 @@ export function parseRekordboxM3u8(
     }
 
     if (line.startsWith('#')) {
-      // Unknown comment/tag — skip
       continue
     }
 
-    // This line is a file path
-    const location = normalizePath(line)
+    // This line is a file path (or file:// URI)
+    const location = decodeFileUri(line) ?? line
 
     const { name, artist } = parseDisplayName(pendingDisplayName, location)
 
@@ -128,9 +123,15 @@ function parseDisplayName(
   location: string
 ): { name: string; artist: string } {
   if (!displayName) {
-    // Fall back to filename without extension
     const filename = location.split(/[\\/]/).pop() ?? ''
     const nameOnly = filename.replace(/\.[^.]+$/, '')
+    const dashIdx = nameOnly.indexOf(' - ')
+    if (dashIdx > 0) {
+      return {
+        artist: nameOnly.slice(0, dashIdx).trim(),
+        name: nameOnly.slice(dashIdx + 3).trim()
+      }
+    }
     return { name: nameOnly, artist: '' }
   }
 
@@ -143,22 +144,4 @@ function parseDisplayName(
   }
 
   return { name: displayName, artist: '' }
-}
-
-/**
- * Normalize a path from M3U8:
- * - Replace backslashes with forward slashes for consistency
- * - Decode percent-encoded characters if needed
- */
-function normalizePath(raw: string): string {
-  try {
-    // Handle file:// URIs that some exporters include
-    if (raw.startsWith('file://')) {
-      const decoded = decodeURIComponent(raw.replace(/^file:\/\//, ''))
-      return decoded.replace(/^\/([A-Za-z]:)/, '$1')
-    }
-  } catch {
-    // ignore decode errors
-  }
-  return raw
 }

@@ -1,35 +1,171 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
+import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } from 'electron'
+import { join, basename, extname } from 'path'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs'
+import { randomUUID } from 'crypto'
 import { parseRekordboxFile } from '../core/rekordbox/parseRekordboxFile'
+import { buildRekordboxXml } from '../core/rekordbox/rekordboxXmlBuilder'
+import {
+  buildDjSetlistTxt,
+  buildDjSetlistMarkdown,
+  buildStreamingCsv,
+  buildCueSheet
+} from '../core/export/extraExporters'
+import { relocateTracksFromFileList } from '../core/analytics/playlistTools'
+import { decodeTextBuffer, sanitizeFilename } from '../core/common/filePaths'
 import { exportPlaylist } from '../core/traktor/exportTraktor'
-import { performSpotifyLogin } from '../core/spotify/spotifyAuth'
-import { getCurrentUser, exportPlaylistToSpotify } from '../core/spotify/spotifyApi'
-import type { Playlist } from '../core/common/types'
+import {
+  performSpotifyLogin,
+  refreshSpotifyToken,
+  cancelActiveSpotifyLogin,
+  type SpotifyTokens
+} from '../core/spotify/spotifyAuth'
+import {
+  getCurrentUser,
+  matchPlaylistTracks,
+  searchManualCandidates,
+  createSpotifyPlaylistFromMatches,
+  exportPlaylistToSpotify
+} from '../core/spotify/spotifyApi'
+import { buildTrackFingerprint } from '../core/spotify/matchTracks'
+import { MatchCache } from '../core/spotify/matchCache'
+import type {
+  Playlist,
+  Track,
+  SpotifyMatch,
+  ExportHistoryEntry
+} from '../core/common/types'
 
-// ---- Spotify session state -----------------------------------------------
+// ---- Persistent Config, Secure Tokens, Cache & History -------------------
 
-let spotifyToken: string | null = null
+type StoredSpotifyConfig = {
+  clientId?: string
+  encryptedTokens?: string // base64 safeStorage buffer
+  plainTokens?: SpotifyTokens // fallback when safeStorage unavailable
+}
+
+let cachedTokens: SpotifyTokens | null = null
+let activeAbortController: AbortController | null = null
+let matchCache: MatchCache | null = null
 
 function getSpotifyConfigPath(): string {
   return join(app.getPath('userData'), 'spotify-config.json')
 }
 
-function loadSpotifyClientId(): string {
+function getMatchCache(): MatchCache {
+  if (!matchCache) {
+    matchCache = new MatchCache(join(app.getPath('userData'), 'spotify-match-cache.json'))
+  }
+  return matchCache
+}
+
+function getHistoryPath(): string {
+  return join(app.getPath('userData'), 'export-history.json')
+}
+
+function readSpotifyConfig(): StoredSpotifyConfig {
   try {
     const raw = readFileSync(getSpotifyConfigPath(), 'utf-8')
-    const parsed = JSON.parse(raw) as { clientId?: string }
-    return parsed.clientId ?? ''
+    return JSON.parse(raw) as StoredSpotifyConfig
   } catch {
-    return ''
+    return {}
   }
 }
 
-function saveSpotifyClientId(clientId: string): void {
+function writeSpotifyConfig(cfg: StoredSpotifyConfig): void {
   try {
-    writeFileSync(getSpotifyConfigPath(), JSON.stringify({ clientId }), 'utf-8')
+    writeFileSync(getSpotifyConfigPath(), JSON.stringify(cfg, null, 2), 'utf-8')
   } catch {
-    // non-critical — ignore
+    // non-critical
+  }
+}
+
+function loadSpotifyClientId(): string {
+  return readSpotifyConfig().clientId ?? ''
+}
+
+function saveSpotifyClientId(clientId: string): void {
+  const cfg = readSpotifyConfig()
+  cfg.clientId = clientId
+  writeSpotifyConfig(cfg)
+}
+
+function loadStoredTokens(): SpotifyTokens | null {
+  if (cachedTokens) return cachedTokens
+  const cfg = readSpotifyConfig()
+  try {
+    if (cfg.encryptedTokens && safeStorage.isEncryptionAvailable()) {
+      const decrypted = safeStorage.decryptString(Buffer.from(cfg.encryptedTokens, 'base64'))
+      cachedTokens = JSON.parse(decrypted) as SpotifyTokens
+      return cachedTokens
+    }
+    if (cfg.plainTokens) {
+      cachedTokens = cfg.plainTokens
+      return cachedTokens
+    }
+  } catch {
+    // Corrupted stored token — require re-login
+  }
+  return null
+}
+
+function saveStoredTokens(tokens: SpotifyTokens | null): void {
+  cachedTokens = tokens
+  const cfg = readSpotifyConfig()
+  delete cfg.encryptedTokens
+  delete cfg.plainTokens
+  if (tokens) {
+    if (safeStorage.isEncryptionAvailable()) {
+      cfg.encryptedTokens = safeStorage.encryptString(JSON.stringify(tokens)).toString('base64')
+    } else {
+      cfg.plainTokens = tokens
+    }
+  }
+  writeSpotifyConfig(cfg)
+}
+
+async function getValidSpotifyToken(): Promise<string> {
+  const tokens = loadStoredTokens()
+  if (!tokens) throw new Error('No estás conectado a Spotify')
+
+  if (Date.now() < tokens.expiresAt) {
+    return tokens.accessToken
+  }
+
+  // Try refreshing expired token automatically
+  const clientId = loadSpotifyClientId()
+  if (tokens.refreshToken && clientId) {
+    try {
+      const refreshed = await refreshSpotifyToken(tokens.refreshToken, clientId)
+      saveStoredTokens(refreshed)
+      return refreshed.accessToken
+    } catch {
+      saveStoredTokens(null)
+      throw new Error('Tu sesión de Spotify caducó. Por favor inicia sesión de nuevo.')
+    }
+  }
+
+  saveStoredTokens(null)
+  throw new Error('Tu sesión de Spotify caducó. Por favor inicia sesión de nuevo.')
+}
+
+function loadHistory(): ExportHistoryEntry[] {
+  try {
+    if (!existsSync(getHistoryPath())) return []
+    const raw = readFileSync(getHistoryPath(), 'utf-8')
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as ExportHistoryEntry[]) : []
+  } catch {
+    return []
+  }
+}
+
+function appendHistory(entry: ExportHistoryEntry): void {
+  try {
+    const existing = loadHistory()
+    const next = [entry, ...existing].slice(0, 20)
+    writeFileSync(getHistoryPath(), JSON.stringify(next, null, 2), 'utf-8')
+  } catch {
+    // non-critical
   }
 }
 
@@ -37,17 +173,25 @@ function saveSpotifyClientId(clientId: string): void {
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: 1240,
+    height: 840,
+    minWidth: 920,
+    minHeight: 620,
     title: 'FZR Rekordbox Exporter',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     },
-    backgroundColor: '#0f0f0f'
+    backgroundColor: '#0a0b0e'
+  })
+
+  // Open external URLs in the user's default system browser instead of a blank Electron window
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
@@ -68,35 +212,126 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  cancelActiveSpotifyLogin()
   if (process.platform !== 'darwin') app.quit()
 })
 
-// ---- IPC Handlers --------------------------------------------------------
+// ---- Rekordbox Import IPC Handlers ---------------------------------------
 
-/** Open file dialog and parse — supports XML, M3U8/M3U and TXT from Rekordbox */
+function parseLocalRekordboxFile(filePath: string) {
+  const buffer = readFileSync(filePath)
+  const content = decodeTextBuffer(buffer)
+  const parseResult = parseRekordboxFile(content, filePath)
+  return { filePath, parseResult }
+}
+
+/** Open file dialog and parse — supports Rekordbox XML/M3U8/TXT and Traktor NML */
 ipcMain.handle('rekordbox:openAndParse', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Seleccionar exportación de Rekordbox',
+    title: 'Seleccionar exportación de Rekordbox o Traktor',
     filters: [
       {
-        name: 'Exportaciones de Rekordbox',
-        extensions: ['xml', 'm3u8', 'm3u', 'txt']
+        name: 'Exportaciones DJ (Rekordbox / Traktor / CSV)',
+        extensions: ['xml', 'nml', 'm3u8', 'm3u', 'txt', 'csv']
       },
       { name: 'Rekordbox XML', extensions: ['xml'] },
+      { name: 'Traktor NML', extensions: ['nml'] },
       { name: 'Playlist M3U8/M3U', extensions: ['m3u8', 'm3u'] },
       { name: 'Texto de Rekordbox (TXT)', extensions: ['txt'] },
+      { name: 'CSV Streaming (Exportify / Soundiiz)', extensions: ['csv'] },
       { name: 'Todos los archivos', extensions: ['*'] }
     ],
     properties: ['openFile']
   })
 
   if (canceled || filePaths.length === 0) return null
+  return parseLocalRekordboxFile(filePaths[0])
+})
 
-  const filePath = filePaths[0]
-  const content = readFileSync(filePath, 'utf-8')
-  const parseResult = parseRekordboxFile(content, filePath)
+/** Parse a specific file path (used by Drag & Drop and recent files) */
+ipcMain.handle('rekordbox:parsePath', async (_event, filePath: string) => {
+  if (!filePath || !existsSync(filePath)) {
+    throw new Error('El archivo no existe o no se puede leer.')
+  }
+  return parseLocalRekordboxFile(filePath)
+})
 
-  return { filePath, parseResult }
+/** Check disk existence for a batch of file paths */
+ipcMain.handle('rekordbox:checkFilesExist', async (_event, paths: string[]) => {
+  const result: Record<string, boolean> = {}
+  for (const p of paths) {
+    if (!p) continue
+    try {
+      result[p] = existsSync(p)
+    } catch {
+      result[p] = false
+    }
+  }
+  return result
+})
+
+const AUDIO_EXTENSIONS = new Set([
+  '.mp3', '.wav', '.flac', '.aiff', '.aif', '.m4a', '.ogg', '.alac', '.aac'
+])
+
+function scanAudioFiles(rootDir: string, maxFiles = 80000, maxDepth = 12): string[] {
+  const found: string[] = []
+  const walk = (dir: string, depth: number): void => {
+    if (depth > maxDepth || found.length >= maxFiles) return
+    let entries
+    try {
+      entries = readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const entry of entries) {
+      if (found.length >= maxFiles) return
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        walk(fullPath, depth + 1)
+      } else if (entry.isFile()) {
+        const ext = extname(entry.name).toLowerCase()
+        if (AUDIO_EXTENSIONS.has(ext)) {
+          found.push(fullPath)
+        }
+      }
+    }
+  }
+  walk(rootDir, 0)
+  return found
+}
+
+/** Pick a local music root folder and automatically heal broken track paths */
+ipcMain.handle('rekordbox:autoRelocate', async (_event, playlists: Playlist[]) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Seleccionar carpeta de música para relocalizar pistas faltantes',
+    properties: ['openDirectory']
+  })
+  if (canceled || filePaths.length === 0) return null
+
+  const rootDir = filePaths[0]
+  const scannedFiles = scanAudioFiles(rootDir)
+
+  const existingSet = new Set<string>()
+  for (const pl of playlists) {
+    for (const t of pl.tracks) {
+      if (t.location && existsSync(t.location)) {
+        existingSet.add(t.location)
+      }
+    }
+  }
+
+  const { playlists: updated, relocatedCount } = relocateTracksFromFileList(
+    playlists,
+    scannedFiles,
+    existingSet
+  )
+  return {
+    playlists: updated,
+    relocatedCount,
+    scannedCount: scannedFiles.length,
+    rootDir
+  }
 })
 
 /** Open folder dialog for export destination */
@@ -109,7 +344,8 @@ ipcMain.handle('dialog:openOutputDir', async () => {
   return filePaths[0]
 })
 
-/** Export playlists to M3U8/NML/reports/Spotify-txt */
+// ---- Local Export IPC Handler --------------------------------------------
+
 ipcMain.handle(
   'export:playlists',
   async (
@@ -119,23 +355,104 @@ ipcMain.handle(
       outputDir: string
       exportM3U8: boolean
       exportNml: boolean
+      exportRekordboxXml?: boolean
+      exportSetlist?: boolean
+      exportCueSheet?: boolean
+      exportStreamingCsv?: boolean
       exportSpotifyTxt: boolean
+      playlistNamePrefix?: string
+      preserveFolders?: boolean
+      relativeM3uPaths?: boolean
+      copyAudioFiles?: boolean
+      spotifyMatchesByPlaylist?: Record<string, SpotifyMatch[]>
+      spotifyUrlsByPlaylist?: Record<string, string>
     }
   ) => {
     const results = []
 
-    for (const playlist of playlists) {
-      const safePlaylistName = playlist.name.replace(/[<>:"/\\|?*]/g, '_')
-      const playlistDir = join(options.outputDir, safePlaylistName)
+    for (const rawPlaylist of playlists) {
+      const prefix = options.playlistNamePrefix?.trim()
+      const playlist: Playlist = prefix
+        ? { ...rawPlaylist, name: `${prefix} ${rawPlaylist.name}`.trim() }
+        : rawPlaylist
+      const safePlaylistName = sanitizeFilename(playlist.name)
+
+      // Respect nested Rekordbox folder hierarchy when requested
+      let playlistDir: string
+      if (options.preserveFolders && playlist.path.length > 1) {
+        const folderSegments = playlist.path
+          .slice(0, -1)
+          .filter((seg) => seg.toUpperCase() !== 'ROOT')
+          .map((seg) => sanitizeFilename(seg))
+        playlistDir = join(options.outputDir, ...folderSegments, safePlaylistName)
+      } else {
+        playlistDir = join(options.outputDir, safePlaylistName)
+      }
 
       if (!existsSync(playlistDir)) {
         mkdirSync(playlistDir, { recursive: true })
       }
 
+      // Check local file existence + optionally copy audio files into playlistDir/audio
+      const fileExistsMap = new Map<string, boolean>()
+      const pathOverrides = new Map<string, string>()
+      let copiedFilesCount = 0
+
+      let audioDir: string | undefined
+      if (options.copyAudioFiles) {
+        audioDir = join(playlistDir, 'audio')
+        if (!existsSync(audioDir)) mkdirSync(audioDir, { recursive: true })
+      }
+
+      const usedAudioNames = new Set<string>()
+      for (const track of playlist.tracks) {
+        if (!track.location) {
+          fileExistsMap.set(track.internalId, false)
+          continue
+        }
+        const exists = existsSync(track.location)
+        fileExistsMap.set(track.internalId, exists)
+
+        if (exists && audioDir) {
+          try {
+            const origBase = basename(track.location)
+            const ext = extname(origBase)
+            const stem = sanitizeFilename(origBase.slice(0, origBase.length - ext.length), 'track')
+            let candidate = `${stem}${ext}`
+            let counter = 2
+            while (usedAudioNames.has(candidate.toLowerCase())) {
+              candidate = `${stem}_${counter}${ext}`
+              counter++
+            }
+            usedAudioNames.add(candidate.toLowerCase())
+            const destPath = join(audioDir, candidate)
+            if (!existsSync(destPath)) {
+              copyFileSync(track.location, destPath)
+            }
+            pathOverrides.set(track.internalId, destPath)
+            copiedFilesCount++
+          } catch {
+            // Leave original path if copy fails
+          }
+        }
+      }
+
+      // Build Spotify match lookup map if available
+      let spotifyMatchesMap: Map<string, SpotifyMatch> | undefined
+      const playlistMatches = options.spotifyMatchesByPlaylist?.[playlist.id]
+      if (playlistMatches && playlistMatches.length > 0) {
+        spotifyMatchesMap = new Map(playlistMatches.map((m) => [m.sourceTrackId, m]))
+      }
+
       const output = exportPlaylist(playlist, {
         outputDir: playlistDir,
         exportM3U8: options.exportM3U8,
-        exportNml: options.exportNml
+        exportNml: options.exportNml,
+        relativeM3uPaths: options.relativeM3uPaths || options.copyAudioFiles,
+        pathOverrides: pathOverrides.size > 0 ? pathOverrides : undefined,
+        fileExistsMap,
+        spotifyMatches: spotifyMatchesMap,
+        spotifyPlaylistUrl: options.spotifyUrlsByPlaylist?.[playlist.id]
       })
 
       if (output.m3u8Content) {
@@ -155,10 +472,46 @@ ipcMain.handle(
         writeFileSync(spotifyTxtPath, txtContent, 'utf-8')
       }
 
+      let rekordboxXmlPath: string | undefined
+      if (options.exportRekordboxXml) {
+        const rbXml = buildRekordboxXml([playlist], {
+          pathOverrides: pathOverrides.size > 0 ? pathOverrides : undefined
+        })
+        rekordboxXmlPath = join(playlistDir, `${safePlaylistName}_rekordbox.xml`)
+        writeFileSync(rekordboxXmlPath, rbXml, 'utf-8')
+      }
+
+      let setlistTxtPath: string | undefined
+      let setlistMdPath: string | undefined
+      if (options.exportSetlist) {
+        setlistTxtPath = join(playlistDir, `${safePlaylistName}_setlist.txt`)
+        setlistMdPath = join(playlistDir, `${safePlaylistName}_setlist.md`)
+        writeFileSync(setlistTxtPath, buildDjSetlistTxt(playlist), 'utf-8')
+        writeFileSync(setlistMdPath, buildDjSetlistMarkdown(playlist), 'utf-8')
+      }
+
+      let cueSheetPath: string | undefined
+      if (options.exportCueSheet) {
+        cueSheetPath = join(playlistDir, `${safePlaylistName}.cue`)
+        writeFileSync(cueSheetPath, buildCueSheet(playlist), 'utf-8')
+      }
+
+      let streamingCsvPath: string | undefined
+      if (options.exportStreamingCsv) {
+        streamingCsvPath = join(playlistDir, `${safePlaylistName}_streaming.csv`)
+        writeFileSync(streamingCsvPath, buildStreamingCsv(playlist), 'utf-8')
+      }
+
       results.push({
         ...output.result,
+        copiedFilesCount: options.copyAudioFiles ? copiedFilesCount : undefined,
         nmlPath: output.nmlContent ? join(playlistDir, `${safePlaylistName}.nml`) : undefined,
         m3uPath: output.m3u8Content ? join(playlistDir, `${safePlaylistName}.m3u8`) : undefined,
+        rekordboxXmlPath,
+        setlistTxtPath,
+        setlistMdPath,
+        cueSheetPath,
+        streamingCsvPath,
         reportJsonPath: join(playlistDir, `${safePlaylistName}_report.json`),
         reportCsvPath: join(playlistDir, `${safePlaylistName}_report.csv`),
         spotifyTxtPath
@@ -171,56 +524,161 @@ ipcMain.handle(
 
 /** Open folder in Explorer/Finder */
 ipcMain.handle('shell:openFolder', async (_event, folderPath: string) => {
-  const { shell } = await import('electron')
-  await shell.openPath(folderPath)
+  if (folderPath) {
+    await shell.openPath(folderPath)
+  }
+})
+
+/** Safely open external HTTP(S) URL in default system browser */
+ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) {
+    await shell.openExternal(url)
+  }
+})
+
+// ---- History IPC Handlers ------------------------------------------------
+
+ipcMain.handle('history:get', () => loadHistory())
+
+ipcMain.handle('history:add', (_event, entry: Omit<ExportHistoryEntry, 'id'>) => {
+  appendHistory({ ...entry, id: randomUUID() })
+})
+
+ipcMain.handle('history:clear', () => {
+  try {
+    writeFileSync(getHistoryPath(), '[]', 'utf-8')
+  } catch {
+    // ignore
+  }
 })
 
 // ---- Spotify IPC Handlers ------------------------------------------------
 
-/** Get stored client_id */
 ipcMain.handle('spotify:getClientId', () => loadSpotifyClientId())
 
-/** Save client_id and persist */
 ipcMain.handle('spotify:setClientId', (_event, clientId: string) => {
   saveSpotifyClientId(clientId)
 })
 
-/** Get current session status */
 ipcMain.handle('spotify:getStatus', async () => {
-  if (!spotifyToken) return { loggedIn: false, displayName: null }
   try {
-    const user = await getCurrentUser(spotifyToken)
+    const token = await getValidSpotifyToken()
+    const user = await getCurrentUser(token)
     return { loggedIn: true, displayName: user.display_name || user.id }
   } catch {
-    spotifyToken = null
     return { loggedIn: false, displayName: null }
   }
 })
 
-/** Start OAuth PKCE login — opens browser, captures callback */
 ipcMain.handle('spotify:login', async (_event, clientId: string) => {
   saveSpotifyClientId(clientId)
-  spotifyToken = await performSpotifyLogin(clientId)
-  const user = await getCurrentUser(spotifyToken)
+  const tokens = await performSpotifyLogin(clientId)
+  saveStoredTokens(tokens)
+  const user = await getCurrentUser(tokens.accessToken)
   return { success: true, displayName: user.display_name || user.id }
 })
 
-/** Log out */
-ipcMain.handle('spotify:logout', () => {
-  spotifyToken = null
+ipcMain.handle('spotify:cancelLogin', () => {
+  cancelActiveSpotifyLogin()
 })
 
-/** Export a single playlist to Spotify with progress events */
-ipcMain.handle(
-  'spotify:exportPlaylist',
-  async (event, playlist: Playlist) => {
-    if (!spotifyToken) throw new Error('No estás conectado a Spotify')
+ipcMain.handle('spotify:logout', () => {
+  cancelActiveSpotifyLogin()
+  saveStoredTokens(null)
+})
 
-    const result = await exportPlaylistToSpotify(playlist, spotifyToken, (progress) => {
-      event.sender.send('spotify:progress', { playlistName: playlist.name, ...progress })
+ipcMain.handle('spotify:clearCache', () => {
+  getMatchCache().clear()
+})
+
+/** Match all tracks of a playlist against Spotify (with progress & caching) */
+ipcMain.handle('spotify:matchPlaylist', async (event, playlist: Playlist) => {
+  const token = await getValidSpotifyToken()
+  activeAbortController?.abort()
+  activeAbortController = new AbortController()
+
+  try {
+    return await matchPlaylistTracks(playlist, token, {
+      cache: getMatchCache(),
+      signal: activeAbortController.signal,
+      onProgress: (progress) => {
+        event.sender.send('spotify:progress', { playlistName: playlist.name, ...progress })
+      }
     })
+  } finally {
+    activeAbortController = null
+  }
+})
 
-    return result
+/** Cancel any in-flight Spotify matching/export */
+ipcMain.handle('spotify:cancelOperation', () => {
+  activeAbortController?.abort()
+  activeAbortController = null
+})
+
+/** Manual search in Spotify from the Review screen */
+ipcMain.handle('spotify:searchManual', async (_event, query: string, track: Track) => {
+  const token = await getValidSpotifyToken()
+  return searchManualCandidates(query, track, token)
+})
+
+/** Persist a manual user match choice in local cache */
+ipcMain.handle('spotify:saveManualMatch', (_event, track: Track, match: SpotifyMatch) => {
+  const cache = getMatchCache()
+  cache.set(buildTrackFingerprint(track), match)
+  cache.flush()
+})
+
+/** Create a Spotify playlist from reviewed SpotifyMatch[] */
+ipcMain.handle(
+  'spotify:createPlaylist',
+  async (
+    event,
+    playlistName: string,
+    matches: SpotifyMatch[],
+    options?: { isPublic?: boolean }
+  ) => {
+    const token = await getValidSpotifyToken()
+    activeAbortController?.abort()
+    activeAbortController = new AbortController()
+
+    try {
+      return await createSpotifyPlaylistFromMatches(playlistName, matches, token, {
+        isPublic: options?.isPublic ?? false,
+        signal: activeAbortController.signal,
+        onProgress: (progress) => {
+          event.sender.send('spotify:progress', { playlistName, ...progress })
+        }
+      })
+    } finally {
+      activeAbortController = null
+    }
   }
 )
 
+/** One-shot export playlist directly to Spotify (kept for quick export mode) */
+ipcMain.handle(
+  'spotify:exportPlaylist',
+  async (event, playlist: Playlist, options?: { isPublic?: boolean }) => {
+    const token = await getValidSpotifyToken()
+    activeAbortController?.abort()
+    activeAbortController = new AbortController()
+
+    try {
+      return await exportPlaylistToSpotify(
+        playlist,
+        token,
+        (progress) => {
+          event.sender.send('spotify:progress', { playlistName: playlist.name, ...progress })
+        },
+        {
+          isPublic: options?.isPublic ?? false,
+          cache: getMatchCache(),
+          signal: activeAbortController.signal
+        }
+      )
+    } finally {
+      activeAbortController = null
+    }
+  }
+)

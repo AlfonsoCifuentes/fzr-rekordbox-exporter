@@ -9,24 +9,35 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FZR Rekordbox Exporter — Export to Spotify & Traktor",
+  metadataBase: new URL("https://fzr-rekordbox-exporter.pages.dev"),
+  title: "FZR Rekordbox Exporter — Export to Traktor & Spotify",
   description:
-    "Export your Rekordbox playlists and folders to Spotify and Traktor in seconds. Free, offline, open source Windows app. Supports XML, M3U8 and TXT exports.",
+    "Export your Rekordbox playlists and folders to Traktor Pro (NML v19 with cue points, BPM & Open Key) and Spotify (fuzzy matching & manual review). Free, local, open source Windows app.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
   keywords: [
     "rekordbox export",
     "rekordbox to spotify",
     "rekordbox to traktor",
     "dj playlist export",
     "rekordbox xml",
+    "traktor nml",
     "pioneer dj",
     "native instruments",
-    "traktor nml",
     "fzr",
   ],
   openGraph: {
-    title: "FZR Rekordbox Exporter",
-    description: "Export your Rekordbox playlists to Spotify & Traktor",
+    title: "FZR Rekordbox Exporter — Export to Traktor & Spotify",
+    description:
+      "Convert Rekordbox XML, M3U8 & TXT playlists to native Traktor Pro NML v19 and Spotify playlists. 100% local & open source.",
     type: "website",
+    url: "https://fzr-rekordbox-exporter.pages.dev",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FZR Rekordbox Exporter",
+    description: "Export Rekordbox playlists to Traktor Pro & Spotify in one click.",
   },
 };
 

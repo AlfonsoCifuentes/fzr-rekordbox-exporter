@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { ExportResult } from '../../../core/common/types'
 import styles from './ResultsScreen.module.css'
 
@@ -8,6 +8,7 @@ type Props = {
 }
 
 export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Element {
+  const [expandedUnmatched, setExpandedUnmatched] = useState<Record<number, boolean>>({})
   const totalTracks = exportResults.reduce((acc, r) => acc + r.totalTracks, 0)
 
   const openFolder = async (filePath: string | undefined): Promise<void> => {
@@ -28,7 +29,7 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
         <div className={styles.successBanner}>
           <div className={styles.successIcon}>✓</div>
           <div>
-            <div className={styles.successTitle}>¡Exportación finalizada!</div>
+            <div className={styles.successTitle}>¡Exportación finalizada con éxito!</div>
             <div className={styles.successSub}>
               {exportResults.length} playlist{exportResults.length !== 1 ? 's' : ''} ·{' '}
               {totalTracks.toLocaleString()} tracks procesados
@@ -41,7 +42,15 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
             <div key={i} className={styles.resultCard}>
               <div className={styles.resultHeader}>
                 <span className={styles.resultName}>{result.playlistName}</span>
-                <span className={styles.resultTracks}>{result.totalTracks} tracks</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {result.copiedFilesCount !== undefined && result.copiedFilesCount > 0 && (
+                    <span className="tag tag-green">{result.copiedFilesCount} audios copiados</span>
+                  )}
+                  {(result.missingFilesCount ?? 0) > 0 && (
+                    <span className="tag tag-amber">⚠️ {result.missingFilesCount} rutas faltantes</span>
+                  )}
+                  <span className={styles.resultTracks}>{result.totalTracks} tracks</span>
+                </div>
               </div>
 
               <div className={styles.resultFiles}>
@@ -71,6 +80,51 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
                     </button>
                   </div>
                 )}
+                {result.rekordboxXmlPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType} style={{ background: 'rgba(47,123,255,0.2)', color: '#6ba4ff' }}>RB XML</span>
+                    <span className={styles.filePath}>{result.rekordboxXmlPath}</span>
+                    <button
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 8px' }}
+                      onClick={() => openFolder(result.rekordboxXmlPath)}
+                    >
+                      Abrir carpeta
+                    </button>
+                  </div>
+                )}
+                {result.setlistTxtPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType}>SETLIST</span>
+                    <span className={styles.filePath}>{result.setlistTxtPath}</span>
+                    <button
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 8px' }}
+                      onClick={() => openFolder(result.setlistTxtPath)}
+                    >
+                      Abrir carpeta
+                    </button>
+                  </div>
+                )}
+                {result.cueSheetPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType} style={{ background: 'rgba(244,125,32,0.2)', color: 'var(--accent)' }}>CUE</span>
+                    <span className={styles.filePath}>{result.cueSheetPath}</span>
+                    <button
+                      className="btn-ghost"
+                      style={{ fontSize: 11, padding: '3px 8px' }}
+                      onClick={() => openFolder(result.cueSheetPath)}
+                    >
+                      Abrir carpeta
+                    </button>
+                  </div>
+                )}
+                {result.streamingCsvPath && (
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954' }}>STREAM</span>
+                    <span className={styles.filePath}>{result.streamingCsvPath}</span>
+                  </div>
+                )}
                 {result.reportJsonPath && (
                   <div className={styles.fileRow}>
                     <span className={styles.fileType}>JSON</span>
@@ -85,7 +139,7 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
                 )}
                 {result.spotifyTxtPath && (
                   <div className={styles.fileRow}>
-                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954', borderColor: '#1db95440' }}>TXT</span>
+                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954' }}>TXT</span>
                     <span className={styles.filePath}>{result.spotifyTxtPath}</span>
                     <button
                       className="btn-ghost"
@@ -97,45 +151,77 @@ export default function ResultsScreen({ exportResults, onBack }: Props): JSX.Ele
                   </div>
                 )}
                 {result.spotifyPlaylistUrl && (
-                  <div className={styles.fileRow} style={{ background: '#1db95410', borderColor: '#1db95440', borderRadius: 6, padding: '10px 14px' }}>
-                    <span className={styles.fileType} style={{ background: '#1db95420', color: '#1db954', borderColor: '#1db95440' }}>Spotify</span>
-                    <span style={{ flex: 1, fontSize: 12, color: '#aaa' }}>
-                      {result.spotifyMatched ?? 0} canciones añadidas
+                  <div className={styles.fileRow} style={{ background: 'rgba(29, 185, 84, 0.08)', padding: '10px 16px' }}>
+                    <span className={styles.fileType} style={{ background: '#1db95425', color: '#1db954' }}>Spotify</span>
+                    <span style={{ flex: 1, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <strong style={{ color: 'var(--text)' }}>{result.spotifyMatched ?? 0}</strong> canciones añadidas
+                      {result.spotifyPublic ? ' · Pública' : ' · Privada'}
                       {(result.spotifyNotFound ?? 0) > 0 && ` · ${result.spotifyNotFound} no encontradas`}
                     </span>
-                    <a
-                      href={result.spotifyPlaylistUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-ghost"
-                      style={{ fontSize: 11, padding: '3px 10px', color: '#1db954', textDecoration: 'none' }}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        window.open(result.spotifyPlaylistUrl, '_blank')
-                      }}
+                    {result.spotifyUnmatchedTracks && result.spotifyUnmatchedTracks.length > 0 && (
+                      <button
+                        className="btn-ghost"
+                        style={{ fontSize: 11, padding: '3px 8px' }}
+                        onClick={() =>
+                          setExpandedUnmatched((prev) => ({ ...prev, [i]: !prev[i] }))
+                        }
+                      >
+                        {expandedUnmatched[i] ? 'Ocultar faltantes' : 'Ver faltantes'}
+                      </button>
+                    )}
+                    <button
+                      className="btn-green"
+                      style={{ fontSize: 11, padding: '4px 10px' }}
+                      onClick={() => window.electronAPI.openExternal(result.spotifyPlaylistUrl!)}
                     >
                       Abrir en Spotify →
-                    </a>
+                    </button>
                   </div>
                 )}
+
+                {expandedUnmatched[i] &&
+                  result.spotifyUnmatchedTracks &&
+                  result.spotifyUnmatchedTracks.length > 0 && (
+                    <div style={{ padding: '10px 16px', background: 'var(--bg)', borderTop: '1px solid var(--border)', fontSize: 12 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--amber)' }}>
+                        Tracks no añadidos a Spotify ({result.spotifyUnmatchedTracks.length}):
+                      </div>
+                      <ul style={{ paddingLeft: 18, color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                        {result.spotifyUnmatchedTracks.map((t, ti) => (
+                          <li key={ti}>{t.artist} — {t.name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </div>
           ))}
         </div>
 
         <div className={styles.hint}>
-          <strong>Importar en Traktor:</strong> En Traktor, ve a{' '}
-          <em>File → Import → Import Playlist...</em> y selecciona el archivo .nml o .m3u8.
-          {' '}
-          <strong>Para Spotify con el .txt:</strong> Ve a{' '}
-          <a href="https://soundiiz.com" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}
-            onClick={(e) => { e.preventDefault(); window.open('https://soundiiz.com', '_blank') }}>
+          <strong>Importar en Traktor:</strong> En Traktor Pro, ve a{' '}
+          <em>File → Import → Import Playlist...</em> y selecciona el archivo <code>.nml</code> o <code>.m3u8</code>.{' '}
+          <strong>Para Spotify con .txt:</strong> Usa{' '}
+          <a
+            href="https://soundiiz.com"
+            style={{ color: 'var(--accent)' }}
+            onClick={(e) => {
+              e.preventDefault()
+              window.electronAPI.openExternal('https://soundiiz.com')
+            }}
+          >
             Soundiiz
           </a>{' '}o{' '}
-          <a href="https://www.tunemymusic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}
-            onClick={(e) => { e.preventDefault(); window.open('https://www.tunemymusic.com', '_blank') }}>
+          <a
+            href="https://www.tunemymusic.com"
+            style={{ color: 'var(--accent)' }}
+            onClick={(e) => {
+              e.preventDefault()
+              window.electronAPI.openExternal('https://www.tunemymusic.com')
+            }}
+          >
             TuneMyMusic
-          </a>{' '}e importa el archivo .txt.
+          </a>.
         </div>
       </div>
     </div>

@@ -1,30 +1,22 @@
 import { randomUUID } from 'crypto'
 import type { ParseResult, Track, Playlist } from '../common/types'
+import { decodeFileUri, stripBom } from '../common/filePaths'
 
 /**
- * Parse a TXT file exported from Rekordbox.
+ * Parse a TXT file exported from Rekordbox (English or Spanish headers, tab or semicolon separated).
  *
- * Rekordbox exports a tab-separated file with a header row on the first line.
- * The exact column set varies by version, but common columns include:
- *
- *   #  Track Title  Artist  Composer  Album  Grouping  Genre  Kind  Size
- *   Total Time  Disc #  Track #  Year  Date Added  Bit Rate  Sample Rate
- *   Comments  Play Count  Last Played  Rating  Location  Remixer  Tonality
- *   Label  Original Artist  Mix Name  Color  BPM  Date Released  Track Type
- *
- * The parser reads the header to build a dynamic column map, so it tolerates
- * missing or reordered columns between Rekordbox versions.
- *
- * The playlist name is derived from `sourceFileName`.
+ * Rekordbox exports a tab-separated file (often UTF-16 LE, decoded before passing here)
+ * with a header row on the first line.
  */
 export function parseRekordboxTxt(
   content: string,
   sourceFileName: string
 ): ParseResult {
   const warnings: string[] = []
+  const cleaned = stripBom(content)
 
   // Normalize line endings
-  const lines = content.split(/\r?\n/)
+  const lines = cleaned.split(/\r?\n/)
 
   // Find header row (first non-empty line)
   let headerIdx = 0
@@ -36,9 +28,11 @@ export function parseRekordboxTxt(
 
   const headerLine = lines[headerIdx]
 
-  // Detect separator: Rekordbox uses tab, but some locales export with semicolon
+  // Detect separator: Rekordbox uses tab, some locales export with semicolon
   const separator = headerLine.includes('\t') ? '\t' : ';'
-  const headers = headerLine.split(separator).map((h) => h.trim().toLowerCase())
+  const headers = headerLine
+    .split(separator)
+    .map((h) => unquote(h).trim().toLowerCase())
 
   if (headers.length < 2) {
     throw new Error(
@@ -47,26 +41,33 @@ export function parseRekordboxTxt(
     )
   }
 
-  // Build column index map
-  const col = (name: string): number => headers.indexOf(name)
+  // Helper that matches multiple localized/versioned Rekordbox column names
+  const findCol = (...names: string[]): number => {
+    for (const n of names) {
+      const idx = headers.indexOf(n)
+      if (idx !== -1) return idx
+    }
+    return -1
+  }
 
-  // Key column names used by Rekordbox (case-insensitive)
-  const COL_TITLE = col('track title') !== -1 ? col('track title') : col('title')
-  const COL_ARTIST = col('artist')
-  const COL_ALBUM = col('album')
-  const COL_GENRE = col('genre')
-  const COL_TOTAL_TIME = col('total time') !== -1 ? col('total time') : col('duration')
-  const COL_YEAR = col('year')
-  const COL_BITRATE = col('bit rate') !== -1 ? col('bit rate') : col('bitrate')
-  const COL_SAMPLERATE = col('sample rate') !== -1 ? col('sample rate') : col('samplerate')
-  const COL_COMMENTS = col('comments')
-  const COL_RATING = col('rating')
-  const COL_LOCATION = col('location')
-  const COL_REMIXER = col('remixer')
-  const COL_KEY = col('tonality') !== -1 ? col('tonality') : col('key')
-  const COL_BPM = col('bpm')
-  const COL_MIX = col('mix name') !== -1 ? col('mix name') : col('mix')
-  const COL_SIZE = col('size')
+  const COL_TITLE = findCol('track title', 'title', 'título de pista', 'titulo de pista', 'título', 'titulo', 'nombre')
+  const COL_ARTIST = findCol('artist', 'artista')
+  const COL_ALBUM = findCol('album', 'álbum')
+  const COL_GENRE = findCol('genre', 'género', 'genero')
+  const COL_TOTAL_TIME = findCol('total time', 'duration', 'time', 'tiempo', 'duración', 'duracion')
+  const COL_YEAR = findCol('year', 'año', 'ano')
+  const COL_BITRATE = findCol('bit rate', 'bitrate', 'tasa de bits')
+  const COL_SAMPLERATE = findCol('sample rate', 'samplerate', 'frecuencia de muestreo')
+  const COL_COMMENTS = findCol('comments', 'comentarios')
+  const COL_RATING = findCol('rating', 'clasificación', 'clasificacion')
+  const COL_LOCATION = findCol('location', 'ubicación', 'ubicacion', 'ruta')
+  const COL_REMIXER = findCol('remixer', 'remezclador')
+  const COL_KEY = findCol('tonality', 'key', 'tonalidad', 'clave')
+  const COL_BPM = findCol('bpm')
+  const COL_MIX = findCol('mix name', 'mix', 'nombre de mezcla')
+  const COL_SIZE = findCol('size', 'tamaño', 'tamano')
+  const COL_LABEL = findCol('label', 'sello')
+  const COL_DATE_ADDED = findCol('date added', 'fecha añadida', 'fecha anadida')
 
   if (COL_TITLE === -1) {
     warnings.push(
@@ -84,13 +85,12 @@ export function parseRekordboxTxt(
     const cells = line.split(separator)
 
     const get = (colIdx: number): string =>
-      colIdx >= 0 && colIdx < cells.length ? cells[colIdx].trim() : ''
+      colIdx >= 0 && colIdx < cells.length ? unquote(cells[colIdx]).trim() : ''
 
     const name = get(COL_TITLE)
     const artist = get(COL_ARTIST)
 
     if (!name && !artist) {
-      // Likely an empty/summary row at end of file
       continue
     }
 
@@ -98,7 +98,8 @@ export function parseRekordboxTxt(
       warnings.push(`Fila ${i + 1}: pista sin título`)
     }
 
-    const location = get(COL_LOCATION) || undefined
+    const rawLoc = get(COL_LOCATION)
+    const location = rawLoc ? decodeFileUri(rawLoc) : undefined
 
     const track: Track = {
       internalId: randomUUID(),
@@ -106,6 +107,7 @@ export function parseRekordboxTxt(
       artist: artist || '(artista desconocido)',
       album: get(COL_ALBUM) || undefined,
       genre: get(COL_GENRE) || undefined,
+      label: get(COL_LABEL) || undefined,
       remixer: get(COL_REMIXER) || undefined,
       mix: get(COL_MIX) || undefined,
       key: get(COL_KEY) || undefined,
@@ -116,6 +118,7 @@ export function parseRekordboxTxt(
       sampleRate: parseSampleRate(get(COL_SAMPLERATE)),
       fileSize: parseFileSize(get(COL_SIZE)),
       rating: parseRating(get(COL_RATING)),
+      dateAdded: get(COL_DATE_ADDED) || undefined,
       comments: get(COL_COMMENTS) || undefined,
       location
     }
@@ -141,10 +144,14 @@ export function parseRekordboxTxt(
 
 // ---- Helpers -------------------------------------------------------------
 
-/**
- * Parse Rekordbox "Total Time" field.
- * Formats seen: "6:00", "1:30:00", "360"
- */
+function unquote(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return trimmed.slice(1, -1).replace(/""/g, '"')
+  }
+  return trimmed
+}
+
 function parseTotalTime(value: string): number | undefined {
   if (!value) return undefined
   const parts = value.split(':')
@@ -168,39 +175,26 @@ function parseTotalTime(value: string): number | undefined {
   return undefined
 }
 
-/**
- * Parse Rekordbox "Bit Rate" field.
- * Formats seen: "320kbps", "320", "320 kbps"
- */
 function parseBitrate(value: string): number | undefined {
   if (!value) return undefined
   const n = parseInt(value.replace(/[^0-9]/g, ''), 10)
   return isNaN(n) ? undefined : n
 }
 
-/**
- * Parse Rekordbox "Sample Rate" field.
- * Formats seen: "44100", "44100 Hz", "44.1 kHz"
- */
 function parseSampleRate(value: string): number | undefined {
   if (!value) return undefined
   if (value.toLowerCase().includes('khz')) {
-    const n = parseFloat(value)
+    const n = parseFloat(value.replace(',', '.'))
     return isNaN(n) ? undefined : Math.round(n * 1000)
   }
   const n = parseInt(value.replace(/[^0-9]/g, ''), 10)
   return isNaN(n) ? undefined : n
 }
 
-/**
- * Parse Rekordbox "Size" field.
- * Formats seen: "8.3 MB", "8300000", "8.3MB"
- * Returns bytes.
- */
 function parseFileSize(value: string): number | undefined {
   if (!value) return undefined
   const lower = value.toLowerCase()
-  const n = parseFloat(value)
+  const n = parseFloat(value.replace(',', '.'))
   if (isNaN(n)) return undefined
   if (lower.includes('gb')) return Math.round(n * 1_000_000_000)
   if (lower.includes('mb')) return Math.round(n * 1_000_000)
@@ -208,13 +202,8 @@ function parseFileSize(value: string): number | undefined {
   return Math.round(n)
 }
 
-/**
- * Parse Rekordbox star rating.
- * Formats seen: "★★★★★" (1–5 stars), "5", "0"
- */
 function parseRating(value: string): number | undefined {
   if (!value) return undefined
-  // Count star characters
   const stars = (value.match(/★/g) ?? []).length
   if (stars > 0) return stars
   const n = parseInt(value, 10)
@@ -229,6 +218,6 @@ function parseIntOrUndefined(value: string): number | undefined {
 
 function parseFloatOrUndefined(value: string): number | undefined {
   if (!value) return undefined
-  const n = parseFloat(value)
+  const n = parseFloat(value.replace(',', '.'))
   return isNaN(n) ? undefined : n
 }

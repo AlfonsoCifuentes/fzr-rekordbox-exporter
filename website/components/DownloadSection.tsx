@@ -1,24 +1,47 @@
 "use client";
-
-const GITHUB_REPO = "https://github.com/AlfonsoCifuentes/fzr-rekordbox-exporter";
-const RELEASES_URL = `${GITHUB_REPO}/releases/tag/v1.1.0`;
-const EXE_URL = `${GITHUB_REPO}/releases/download/v1.1.0/FZR-Rekordbox-Exporter-1.1.0-x64.exe`;
-
-const requirements = [
-  "Windows 10 / 11 (64-bit)",
-  "4 GB RAM (8 GB recommended)",
-  "200 MB free disk space",
-  "Simple installer wizard (.exe)",
-];
+import { useLocale } from "./LocaleContext";
+import { GITHUB_REPO, useLatestRelease } from "./useLatestRelease";
 
 export default function DownloadSection() {
+  const { locale } = useLocale();
+  const release = useLatestRelease();
+
+  const requirements =
+    locale === "es"
+      ? [
+          "Windows 10 / 11 (64-bit)",
+          "4 GB RAM (8 GB recomendados)",
+          "200 MB de espacio libre",
+          "Instalador (.exe) o versión portable (.zip)",
+        ]
+      : [
+          "Windows 10 / 11 (64-bit)",
+          "4 GB RAM (8 GB recommended)",
+          "200 MB free disk space",
+          "Installer wizard (.exe) or portable (.zip)",
+        ];
+
+  const installSteps =
+    locale === "es"
+      ? [
+          "Descarga el instalador .exe (o el .zip portable)",
+          "Ejecuta el asistente de instalación",
+          "Elige tu carpeta de instalación (opcional)",
+          "Abre desde el acceso directo del escritorio",
+        ]
+      : [
+          "Download the .exe installer (or portable .zip)",
+          "Run it and follow the wizard",
+          "Choose install folder (optional)",
+          "Launch from desktop shortcut",
+        ];
+
   return (
     <section
       id="download"
       className="py-24 relative overflow-hidden"
-      style={{ background: "var(--bg-base)" }}
+      style={{ background: "var(--bg-elevated)" }}
     >
-      {/* Background glow */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -33,13 +56,15 @@ export default function DownloadSection() {
             className="text-xs font-semibold tracking-widest uppercase mb-4"
             style={{ color: "var(--spotify-green)" }}
           >
-            Download
+            {locale === "es" ? "Descarga" : "Download"}
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 tracking-tight">
-            Get FZR Rekordbox Exporter
+            {locale === "es" ? "Descarga FZR Rekordbox Exporter" : "Get FZR Rekordbox Exporter"}
           </h2>
           <p className="text-base max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
-            Free, open source, no registration. Just download and install in seconds.
+            {locale === "es"
+              ? "Gratis, open source y sin registro. Descarga e instala en segundos."
+              : "Free, open source, no registration. Just download and install in seconds."}
           </p>
         </div>
 
@@ -48,11 +73,10 @@ export default function DownloadSection() {
           className="glass rounded-3xl p-8 mb-8"
           style={{
             background: "rgba(29,185,84,0.04)",
-            borderColor: "rgba(29,185,84,0.2)",
+            borderColor: "rgba(29,185,84,0.22)",
           }}
         >
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* App icon placeholder */}
             <div
               className="w-24 h-24 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0"
               style={{
@@ -70,41 +94,54 @@ export default function DownloadSection() {
                 FZR Rekordbox Exporter
               </h3>
               <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                Version 1.1.0 · Windows x64 · Installer ~180 MB
+                {locale === "es" ? "Versión" : "Version"} {release.version} · Windows x64
+                {release.exeSizeMb ? ` · ${release.exeSizeMb}` : ""}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center md:justify-start">
                 <a
-                  href={EXE_URL}
+                  href={release.exeUrl}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95 animate-pulse-glow"
                   style={{ background: "var(--spotify-green)", color: "#000" }}
                 >
                   <DownloadIcon />
-                  Download Installer (.exe)
+                  {locale === "es" ? "Descargar Instalador (.exe)" : "Download Installer (.exe)"}
                 </a>
+
+                {release.zipUrl && (
+                  <a
+                    href={release.zipUrl}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-semibold text-sm glass hover:border-white/25 transition-all duration-200 hover:scale-105 active:scale-95"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {locale === "es" ? "Portable (.zip)" : "Portable (.zip)"}
+                    {release.zipSizeMb ? ` · ${release.zipSizeMb}` : ""}
+                  </a>
+                )}
+
                 <a
-                  href={RELEASES_URL}
+                  href={release.releaseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-semibold text-sm glass hover:border-white/20 transition-all duration-200 hover:scale-105 active:scale-95"
                   style={{ color: "var(--text-muted)" }}
                 >
                   <GitHubIcon />
-                  All releases on GitHub
+                  {locale === "es" ? "Todas las versiones" : "All releases"}
                 </a>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Requirements + How to install side by side */}
+        {/* Requirements + How to install */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="glass rounded-2xl p-6">
             <h4
               className="text-xs font-semibold tracking-widest uppercase mb-4"
               style={{ color: "var(--rekordbox-blue)" }}
             >
-              System Requirements
+              {locale === "es" ? "Requisitos del sistema" : "System Requirements"}
             </h4>
             <ul className="flex flex-col gap-2">
               {requirements.map((req) => (
@@ -124,15 +161,10 @@ export default function DownloadSection() {
               className="text-xs font-semibold tracking-widest uppercase mb-4"
               style={{ color: "var(--traktor-white)" }}
             >
-              How to Install
+              {locale === "es" ? "Cómo instalar" : "How to Install"}
             </h4>
             <ol className="flex flex-col gap-2">
-              {[
-                "Download the .exe installer",
-                "Run it and follow the wizard",
-                "Choose install folder (optional)",
-                "Launch from desktop shortcut",
-              ].map((step, i) => (
+              {installSteps.map((step, i) => (
                 <li key={step} className="flex items-start gap-3 text-sm">
                   <span
                     className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -150,22 +182,40 @@ export default function DownloadSection() {
           </div>
         </div>
 
-        {/* Footnote */}
         <p
           className="text-center text-xs mt-8"
           style={{ color: "var(--text-subtle)" }}
         >
-          Windows may show a SmartScreen warning for unsigned apps. Click &quot;More info&quot; → &quot;Run anyway&quot;.
-          The source code is{" "}
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-white transition-colors"
-          >
-            fully open source on GitHub
-          </a>
-          .
+          {locale === "es" ? (
+            <>
+              Windows puede mostrar un aviso de SmartScreen en apps open source sin firma comercial.
+              Haz clic en &quot;Más información&quot; → &quot;Ejecutar de todas formas&quot;. Código
+              disponible en{" "}
+              <a
+                href={GITHUB_REPO}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-white transition-colors"
+              >
+                GitHub (licencia MIT)
+              </a>
+              .
+            </>
+          ) : (
+            <>
+              Windows may show a SmartScreen warning for unsigned open-source apps. Click &quot;More
+              info&quot; → &quot;Run anyway&quot;. The source code is{" "}
+              <a
+                href={GITHUB_REPO}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-white transition-colors"
+              >
+                fully open source on GitHub
+              </a>
+              .
+            </>
+          )}
         </p>
       </div>
     </section>
