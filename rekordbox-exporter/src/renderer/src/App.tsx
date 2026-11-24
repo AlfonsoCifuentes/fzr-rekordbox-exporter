@@ -12,6 +12,7 @@ import PlaylistsScreen from './screens/PlaylistsScreen'
 import ExportScreen, { type PendingExportConfig } from './screens/ExportScreen'
 import ReviewScreen from './screens/ReviewScreen'
 import ResultsScreen from './screens/ResultsScreen'
+import AutopilotScreen from './screens/AutopilotScreen'
 
 export type Screen =
   | 'home'
@@ -20,6 +21,7 @@ export type Screen =
   | 'export'
   | 'review'
   | 'results'
+  | 'autopilot'
 
 export type AppState = {
   sourceFilePath: string | null
@@ -92,6 +94,55 @@ export default function App(): JSX.Element {
     } catch (err) {
       setOpenError((err as Error).message || 'Error al procesar el archivo arrastrado')
     }
+  }
+
+  const handleImportSpotifyUrl = async (urlOrId: string, stayInAutopilot = false): Promise<void> => {
+    setOpenError(null)
+    try {
+      const result = await window.electronAPI.importSpotifyUrl(urlOrId)
+      setState((s) => ({
+        ...s,
+        sourceFilePath: result.filePath,
+        parseResult: result.parseResult,
+        selectedPlaylists: result.parseResult.playlists,
+        spotifyMatchesByPlaylist: {},
+        pendingExportConfig: null
+      }))
+      go(stayInAutopilot ? 'autopilot' : 'playlists')
+    } catch (err) {
+      const msg = (err as Error).message || 'Error al importar la playlist pública de Spotify'
+      if (!stayInAutopilot) setOpenError(msg)
+      throw err
+    }
+  }
+
+  const handleApplyDownloadedPaths = (
+    playlistId: string,
+    pathMap: Record<string, string>
+  ): void => {
+    setState((s) => {
+      if (!s.parseResult) return s
+      const patchPlaylist = (pl: Playlist): Playlist =>
+        pl.id !== playlistId
+          ? pl
+          : {
+              ...pl,
+              tracks: pl.tracks.map((t) =>
+                pathMap[t.internalId] ? { ...t, location: pathMap[t.internalId] } : t
+              )
+            }
+      const nextAll = s.parseResult.playlists.map(patchPlaylist)
+      const targetPl = nextAll.find((p) => p.id === playlistId)
+      const nextSel = targetPl
+        ? [targetPl, ...s.selectedPlaylists.filter((p) => p.id !== playlistId)]
+        : s.selectedPlaylists.map(patchPlaylist)
+      return {
+        ...s,
+        parseResult: { ...s.parseResult, playlists: nextAll },
+        selectedPlaylists: nextSel
+      }
+    })
+    go('export')
   }
 
   const recordHistory = async (results: ExportResult[]): Promise<void> => {
@@ -239,8 +290,23 @@ export default function App(): JSX.Element {
             })}
           </div>
 
-          {/* Right: Tri-platform LED indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+          {/* Right: Soulseek Autopilot shortcut + Tri-platform LED indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 10, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+            <button
+              className="btn-secondary"
+              style={{
+                fontSize: 11,
+                padding: '4px 10px',
+                borderRadius: 999,
+                color: screen === 'autopilot' ? '#ffffff' : '#5ce1ff',
+                borderColor: screen === 'autopilot' ? 'rgba(0,212,255,0.75)' : 'rgba(0,212,255,0.32)',
+                background: screen === 'autopilot' ? 'rgba(0,212,255,0.2)' : undefined
+              }}
+              onClick={() => go('autopilot')}
+            >
+              <span className="led-dot" style={{ background: '#00d4ff', boxShadow: '0 0 6px #00d4ff' }} />
+              Soulseek Autopilot
+            </button>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rb-blue)', boxShadow: '0 0 8px var(--rb-blue)' }} />
             <span>RB</span>
             <span style={{ opacity: 0.35 }}>⇄</span>
@@ -260,7 +326,7 @@ export default function App(): JSX.Element {
               bottom: 0,
               height: 1.5,
               background:
-                'linear-gradient(90deg, transparent 0%, #0095ff 25%, #e8edf7 50%, #ff7a1a 68%, #1db954 88%, transparent 100%)',
+                'linear-gradient(90deg, transparent 0%, #0095ff 25%, #00d4ff 45%, #ff7a1a 68%, #1db954 88%, transparent 100%)',
               opacity: 0.55
             }}
           />
@@ -272,6 +338,8 @@ export default function App(): JSX.Element {
           <HomeScreen
             onOpenFile={handleOpenDialog}
             onDropFile={handleDropPath}
+            onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, false)}
+            onOpenAutopilot={() => go('autopilot')}
             errorMessage={openError}
             onClearError={() => setOpenError(null)}
           />
@@ -298,6 +366,7 @@ export default function App(): JSX.Element {
               }))
             }
             onSelectionChange={(sel) => setState((s) => ({ ...s, selectedPlaylists: sel }))}
+            onOpenAutopilot={() => go('autopilot')}
             onContinue={() => go('export')}
             onBack={() => go('import')}
           />
@@ -340,6 +409,19 @@ export default function App(): JSX.Element {
             onBack={() => go('home')}
           />
         )}
+        {screen === 'autopilot' && (
+          <AutopilotScreen
+            playlists={
+              state.selectedPlaylists.length > 0
+                ? state.selectedPlaylists
+                : state.parseResult?.playlists ?? []
+            }
+            onBack={() => go(state.parseResult ? 'playlists' : 'home')}
+            onLoadFile={handleOpenDialog}
+            onImportSpotifyUrl={(url) => handleImportSpotifyUrl(url, true)}
+            onApplyDownloadedPaths={handleApplyDownloadedPaths}
+          />
+        )}
       </div>
 
       {/* Persistent Traktor/Rekordbox Hardware Footer Status Bar */}
@@ -374,8 +456,8 @@ export default function App(): JSX.Element {
         <MiniRgbWaveform bars={22} height={12} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <span>100% LOCAL · ZERO UPLOAD</span>
-          <span style={{ color: 'var(--text)', fontWeight: 700 }}>v1.5.0</span>
+          <span>100% LOCAL · SOULSEEK AUTOPILOT</span>
+          <span style={{ color: 'var(--text)', fontWeight: 700 }}>v2.0.0</span>
         </div>
       </div>
     </div>

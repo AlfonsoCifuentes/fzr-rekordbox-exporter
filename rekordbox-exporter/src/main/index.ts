@@ -1,8 +1,18 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, safeStorage, Notification } from 'electron'
 import { join, basename, extname } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs'
 import { randomUUID } from 'crypto'
 import { parseDjBuffer } from '../core/rekordbox/parseRekordboxFile'
+import { fetchPublicSpotifyPlaylist } from '../core/spotify/spotifyPublicImport'
+import { SoulseekAutopilotEngine, testSoulseekLogin } from '../core/soulseek/autopilotEngine'
+import type { AutopilotConfig, AutopilotSessionState } from '../core/soulseek/types'
+import {
+  loadAutopilotConfig,
+  saveAutopilotConfig,
+  loadAutopilotState,
+  saveAutopilotState,
+  clearAutopilotState
+} from './soulseekStore'
 import { buildRekordboxXml } from '../core/rekordbox/rekordboxXmlBuilder'
 import {
   buildDjSetlistTxt,
@@ -47,6 +57,7 @@ type StoredSpotifyConfig = {
 let cachedTokens: SpotifyTokens | null = null
 let activeAbortController: AbortController | null = null
 let matchCache: MatchCache | null = null
+const autopilotEngine = new SoulseekAutopilotEngine()
 
 function getSpotifyConfigPath(): string {
   return join(app.getPath('userData'), 'spotify-config.json')
@@ -217,6 +228,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   cancelActiveSpotifyLogin()
+  autopilotEngine.cancel()
   if (process.platform !== 'darwin') app.quit()
 })
 
@@ -694,3 +706,72 @@ ipcMain.handle(
     }
   }
 )
+
+// ---- Public Spotify URL Importer & Soulseek Autopilot IPC Handlers -------
+
+ipcMain.handle('import:spotifyUrl', async (_event, urlOrId: string) => {
+  return fetchPublicSpotifyPlaylist(urlOrId)
+})
+
+ipcMain.handle('soulseek:getConfig', () => loadAutopilotConfig())
+
+ipcMain.handle('soulseek:saveConfig', (_event, config: AutopilotConfig) => {
+  saveAutopilotConfig(config)
+})
+
+ipcMain.handle('soulseek:testLogin', async (_event, username: string, password: string) => {
+  return testSoulseekLogin(username, password)
+})
+
+ipcMain.handle('soulseek:getSavedState', () => loadAutopilotState())
+
+ipcMain.handle('soulseek:clearSavedState', () => {
+  clearAutopilotState()
+})
+
+ipcMain.handle(
+  'soulseek:start',
+  async (
+    event,
+    playlist: Playlist,
+    config: AutopilotConfig,
+    resumeState?: AutopilotSessionState
+  ) => {
+    saveAutopilotConfig(config)
+    return autopilotEngine.run(
+      playlist,
+      config,
+      {
+        onProgress: (progress) => {
+          if (!event.sender.isDestroyed()) {
+            event.sender.send('soulseek:progress', progress)
+          }
+        },
+        onSaveState: (state) => saveAutopilotState(state),
+        onClearState: () => clearAutopilotState(),
+        onCompleteNotification: (title, body) => {
+          try {
+            if (Notification.isSupported()) {
+              new Notification({ title, body }).show()
+            }
+          } catch {
+            // ignore notification errors
+          }
+        }
+      },
+      resumeState
+    )
+  }
+)
+
+ipcMain.handle('soulseek:pause', () => {
+  autopilotEngine.pause()
+})
+
+ipcMain.handle('soulseek:resume', () => {
+  autopilotEngine.resume()
+})
+
+ipcMain.handle('soulseek:cancel', () => {
+  autopilotEngine.cancel()
+})

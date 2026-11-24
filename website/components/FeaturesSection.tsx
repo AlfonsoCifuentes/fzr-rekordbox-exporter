@@ -15,11 +15,11 @@ export default function FeaturesSection() {
   const features = [
     {
       icon: <FormatsSvgIcon color="#52b8ff" />,
-      title: locale === "es" ? "XML, NML, M3U8, TXT y CSV" : "XML, NML, M3U8, TXT & CSV",
+      title: locale === "es" ? "XML, NML, Serato, VDJ y Spotify URL" : "XML, NML, Serato, VDJ & Spotify URL",
       description:
         locale === "es"
-          ? "Importa colecciones Rekordbox XML, Traktor NML, playlists M3U8, Rekordbox UTF-16 TXT y CSV de Exportify / Soundiiz."
-          : "Import Rekordbox XML collections, Traktor NML, M3U8 playlists, UTF-16LE TXT exports & Exportify/Soundiiz CSVs.",
+          ? "Importa Rekordbox XML, Traktor NML, Serato .crate, VirtualDJ XML, M3U8, TXT, CSV o pega directamente una URL pública de Spotify."
+          : "Import Rekordbox XML, Traktor NML, Serato .crate, VirtualDJ XML, M3U8, TXT, CSV or paste any public Spotify playlist URL.",
       accent: "#0095ff",
       tag: "MULTI-INPUT",
     },
@@ -44,32 +44,32 @@ export default function FeaturesSection() {
       tag: "PKCE OAUTH",
     },
     {
-      icon: <HarmonicWaveSvgIcon color="#52b8ff" />,
-      title: locale === "es" ? "Análisis Camelot, BPM y Merge/Diff" : "Camelot Flow, BPM Curve & Diff",
+      icon: <FolderSyncSvgIcon color="#5ce1ff" />,
+      title: locale === "es" ? "FZR Soulseek Autopilot Integrado" : "Built-in FZR Soulseek Autopilot",
       description:
         locale === "es"
-          ? "Curva de energía BPM, auto-orden armónico Camelot, división por zonas BPM o género, fusión de sets, comparador Diff y deduplicación."
-          : "Live BPM energy curve, 1-click Camelot harmonic auto-sort, BPM/Genre splitting, playlist merge, visual Diff & deduplication.",
+          ? "Protocolo nativo (sin OCR ni Python): filtros Hi-Res / FLAC / 320+, presets anti-ban, Dry-Run, Pausa/Reanudar e informes JSON."
+          : "Native Soulseek protocol (zero OCR/Python): Hi-Res / FLAC / 320+ filters, anti-ban presets, Dry-Run, Pause/Resume & JSON reports.",
+      accent: "#00d4ff",
+      tag: "AUTOPILOT v2.0",
+    },
+    {
+      icon: <HarmonicWaveSvgIcon color="#52b8ff" />,
+      title: locale === "es" ? "Rueda Camelot, Curva BPM y Prep HTML" : "Camelot Wheel, BPM Curve & Prep HTML",
+      description:
+        locale === "es"
+          ? "Rueda Camelot interactiva, auto-orden armónico, limpiador de tags, corrección BPM ×2/÷2, zonas BPM, Diff y hoja imprimible de cabina."
+          : "Interactive Camelot Wheel, harmonic auto-sort, tag cleaner, half/double BPM fixer, BPM zones, visual Diff & printable Booth Prep Sheet.",
       accent: "#0095ff",
       tag: "DJ ANALYTICS",
     },
     {
-      icon: <FolderSyncSvgIcon color="#e8edf7" />,
-      title: locale === "es" ? "Relocalizador, USB Portable y CUE" : "Auto-Relocator, USB Copy & CUE",
-      description:
-        locale === "es"
-          ? "Escanea una carpeta local para reparar rutas rotas, copia audios a USB y exporta CUE Sheets (.cue), Setlists con timestamps y CSV."
-          : "Scan any local folder to auto-heal missing paths, copy audio files for portable USBs, and export CUE sheets, DJ Setlists & CSV.",
-      accent: "#e8edf7",
-      tag: "BOOTH TOOLS",
-    },
-    {
       icon: <ShieldLocalSvgIcon color="#3ee87b" />,
-      title: locale === "es" ? "100% Local y Código Abierto" : "100% Local & Open Source",
+      title: locale === "es" ? "100% Local, Cifrado y Open Source" : "100% Local, Encrypted & Open Source",
       description:
         locale === "es"
-          ? "Sin servidores intermedios, sin telemetría ni suscripciones. Tokens cifrados localmente y conversor web 100% client-side."
-          : "Zero cloud uploads, zero telemetry, zero subscriptions. Locally encrypted Spotify tokens & 100% client-side browser converter.",
+          ? "Sin servidores intermedios ni suscripciones. Credenciales cifradas con Windows DPAPI, relocalizador automático en disco y Web Deck client-side."
+          : "Zero cloud uploads or subscriptions. Windows DPAPI encrypted credentials, automatic local disk relocator & client-side Web Deck.",
       accent: "#1db954",
       tag: "MIT LICENSE",
     },

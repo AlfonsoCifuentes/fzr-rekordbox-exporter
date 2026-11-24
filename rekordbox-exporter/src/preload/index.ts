@@ -8,6 +8,11 @@ import type {
   SpotifyCandidate,
   ExportHistoryEntry
 } from '../core/common/types'
+import type {
+  AutopilotConfig,
+  AutopilotProgressEvent,
+  AutopilotSessionState
+} from '../core/soulseek/types'
 
 export type SpotifyStatus = { loggedIn: boolean; displayName: string | null }
 
@@ -57,6 +62,7 @@ export type AutoRelocateResult = {
 export type ElectronAPI = {
   openAndParse: () => Promise<{ filePath: string; parseResult: ParseResult } | null>
   parsePath: (filePath: string) => Promise<{ filePath: string; parseResult: ParseResult }>
+  importSpotifyUrl: (urlOrId: string) => Promise<{ filePath: string; parseResult: ParseResult }>
   checkFilesExist: (paths: string[]) => Promise<Record<string, boolean>>
   autoRelocate: (playlists: Playlist[]) => Promise<AutoRelocateResult | null>
   openOutputDir: () => Promise<string | null>
@@ -94,11 +100,28 @@ export type ElectronAPI = {
     options?: { isPublic?: boolean }
   ) => Promise<SpotifyExportResult>
   onSpotifyProgress: (callback: (data: SpotifyProgressEvent) => void) => () => void
+
+  // Soulseek Autopilot
+  soulseekGetConfig: () => Promise<AutopilotConfig>
+  soulseekSaveConfig: (config: AutopilotConfig) => Promise<void>
+  soulseekTestLogin: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>
+  soulseekGetSavedState: () => Promise<AutopilotSessionState | null>
+  soulseekClearSavedState: () => Promise<void>
+  soulseekStart: (
+    playlist: Playlist,
+    config: AutopilotConfig,
+    resumeState?: AutopilotSessionState
+  ) => Promise<AutopilotProgressEvent>
+  soulseekPause: () => Promise<void>
+  soulseekResume: () => Promise<void>
+  soulseekCancel: () => Promise<void>
+  onSoulseekProgress: (callback: (data: AutopilotProgressEvent) => void) => () => void
 }
 
 const api: ElectronAPI = {
   openAndParse: () => ipcRenderer.invoke('rekordbox:openAndParse'),
   parsePath: (filePath) => ipcRenderer.invoke('rekordbox:parsePath', filePath),
+  importSpotifyUrl: (urlOrId) => ipcRenderer.invoke('import:spotifyUrl', urlOrId),
   checkFilesExist: (paths) => ipcRenderer.invoke('rekordbox:checkFilesExist', paths),
   autoRelocate: (playlists) => ipcRenderer.invoke('rekordbox:autoRelocate', playlists),
   openOutputDir: () => ipcRenderer.invoke('dialog:openOutputDir'),
@@ -134,6 +157,25 @@ const api: ElectronAPI = {
       callback(data)
     ipcRenderer.on('spotify:progress', handler)
     return () => ipcRenderer.removeListener('spotify:progress', handler)
+  },
+
+  // Soulseek Autopilot
+  soulseekGetConfig: () => ipcRenderer.invoke('soulseek:getConfig'),
+  soulseekSaveConfig: (config) => ipcRenderer.invoke('soulseek:saveConfig', config),
+  soulseekTestLogin: (username, password) =>
+    ipcRenderer.invoke('soulseek:testLogin', username, password),
+  soulseekGetSavedState: () => ipcRenderer.invoke('soulseek:getSavedState'),
+  soulseekClearSavedState: () => ipcRenderer.invoke('soulseek:clearSavedState'),
+  soulseekStart: (playlist, config, resumeState) =>
+    ipcRenderer.invoke('soulseek:start', playlist, config, resumeState),
+  soulseekPause: () => ipcRenderer.invoke('soulseek:pause'),
+  soulseekResume: () => ipcRenderer.invoke('soulseek:resume'),
+  soulseekCancel: () => ipcRenderer.invoke('soulseek:cancel'),
+  onSoulseekProgress: (callback) => {
+    const handler = (_: Electron.IpcRendererEvent, data: AutopilotProgressEvent): void =>
+      callback(data)
+    ipcRenderer.on('soulseek:progress', handler)
+    return () => ipcRenderer.removeListener('soulseek:progress', handler)
   }
 }
 

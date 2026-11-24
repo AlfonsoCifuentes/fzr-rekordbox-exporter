@@ -13,6 +13,8 @@ import styles from './HomeScreen.module.css'
 type Props = {
   onOpenFile: () => void
   onDropFile: (filePath: string) => void
+  onImportSpotifyUrl: (url: string) => Promise<void>
+  onOpenAutopilot: () => void
   errorMessage?: string | null
   onClearError?: () => void
 }
@@ -20,6 +22,8 @@ type Props = {
 export default function HomeScreen({
   onOpenFile,
   onDropFile,
+  onImportSpotifyUrl,
+  onOpenAutopilot,
   errorMessage,
   onClearError
 }: Props): JSX.Element {
@@ -27,6 +31,8 @@ export default function HomeScreen({
   const [spotifyUser, setSpotifyUser] = useState<string | null>(null)
   const [history, setHistory] = useState<ExportHistoryEntry[]>([])
   const [showHelp, setShowHelp] = useState(false)
+  const [spotifyUrl, setSpotifyUrl] = useState('')
+  const [importingUrl, setImportingUrl] = useState(false)
 
   useEffect(() => {
     window.electronAPI.spotifyGetStatus().then((st) => {
@@ -62,6 +68,20 @@ export default function HomeScreen({
     setHistory([])
   }
 
+  const handleSpotifyUrlSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault()
+    if (!spotifyUrl.trim() || importingUrl) return
+    setImportingUrl(true)
+    try {
+      await onImportSpotifyUrl(spotifyUrl.trim())
+      setSpotifyUrl('')
+    } catch {
+      // handled by parent error banner
+    } finally {
+      setImportingUrl(false)
+    }
+  }
+
   return (
     <div
       className={`${styles.root} ${dragging ? styles.dragging : ''}`}
@@ -74,7 +94,7 @@ export default function HomeScreen({
         <div className={styles.brandLeft}>
           <FzrEmblem size={28} />
           <span className={styles.brandName}>FZR</span>
-          <span className={styles.versionPill}>v1.5.0 · 100% Local</span>
+          <span className={styles.versionPill}>v2.0.0 · Booth OS</span>
         </div>
 
         <div className={styles.signalStrip}>
@@ -85,9 +105,14 @@ export default function HomeScreen({
           <span className={styles.signalArrow}>⇄</span>
           <span className={styles.signalNode} style={{ color: '#ffab5e' }}>
             <i style={{ background: '#ff7a1a', boxShadow: '0 0 8px #ff7a1a' }} />
-            TRAKTOR PRO
+            TRAKTOR
           </span>
-          <span className={styles.signalArrow}>→</span>
+          <span className={styles.signalArrow}>⇄</span>
+          <span className={styles.signalNode} style={{ color: '#5ce1ff' }}>
+            <i style={{ background: '#00d4ff', boxShadow: '0 0 8px #00d4ff' }} />
+            SOULSEEK
+          </span>
+          <span className={styles.signalArrow}>⇄</span>
           <span className={styles.signalNode} style={{ color: '#46ee82' }}>
             <i style={{ background: '#1db954', boxShadow: '0 0 8px #1db954' }} />
             SPOTIFY
@@ -95,6 +120,20 @@ export default function HomeScreen({
         </div>
 
         <div className={styles.topRight}>
+          <button
+            className="btn-secondary"
+            style={{
+              fontSize: 12,
+              padding: '5px 12px',
+              borderRadius: 999,
+              color: '#5ce1ff',
+              borderColor: 'rgba(0, 212, 255, 0.38)'
+            }}
+            onClick={onOpenAutopilot}
+          >
+            <span className="led-dot" style={{ background: '#00d4ff', boxShadow: '0 0 6px #00d4ff' }} />
+            Soulseek Autopilot
+          </button>
           {spotifyUser && (
             <span className={styles.spotifyBadge}>
               <span className={styles.spotifyDot} />
@@ -183,6 +222,49 @@ export default function HomeScreen({
           </button>
         </div>
 
+        {/* Direct Public Spotify Playlist URL Importer + Autopilot Launchpad */}
+        <form
+          onSubmit={handleSpotifyUrlSubmit}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 14px',
+            borderRadius: 12,
+            background: 'rgba(13, 17, 27, 0.9)',
+            border: '1px solid rgba(29, 185, 84, 0.28)'
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10.5,
+              fontWeight: 700,
+              color: '#46ee82',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            SPOTIFY URL
+          </span>
+          <input
+            type="text"
+            placeholder="Pega una URL de playlist pública de Spotify (https://open.spotify.com/playlist/...)"
+            value={spotifyUrl}
+            onChange={(e) => setSpotifyUrl(e.target.value)}
+            disabled={importingUrl}
+            style={{ flex: 1, fontSize: 12.5 }}
+          />
+          <button
+            type="submit"
+            className="btn-green"
+            style={{ fontSize: 12, padding: '7px 14px', whiteSpace: 'nowrap' }}
+            disabled={!spotifyUrl.trim() || importingUrl}
+          >
+            {importingUrl ? 'Importando...' : 'Importar playlist'}
+          </button>
+        </form>
+
         {/* Studio Feature Cards */}
         <div className={styles.features}>
           <div className={`${styles.feature} ${styles.featureAmber}`}>
@@ -200,8 +282,8 @@ export default function HomeScreen({
               <SpotifyWavesIcon color="#2ee06e" />
             </div>
             <div>
-              <strong>Spotify PKCE + Revisión Manual</strong>
-              <p>Matching fuzzy multi-consulta con puntuación 0–100 y corrección en vivo antes de publicar</p>
+              <strong>Spotify PKCE + Importador por URL</strong>
+              <p>Crea playlists con revisión manual o importa playlists públicas de Spotify sin API keys</p>
             </div>
           </div>
 
@@ -211,17 +293,21 @@ export default function HomeScreen({
             </div>
             <div>
               <strong>Análisis Camelot, Curva BPM y Diff</strong>
-              <p>Auto-orden armónico, división por zonas BPM, fusión, comparador y limpiador de duplicados</p>
+              <p>Rueda armónica, auto-orden, limpiador de tags, zonas BPM, fusión y duplicados</p>
             </div>
           </div>
 
-          <div className={`${styles.feature} ${styles.featureSilver}`}>
-            <div className={styles.featureIconWrap} style={{ background: 'rgba(232,237,247,0.1)', borderColor: 'rgba(232,237,247,0.24)' }}>
-              <FolderTreeIcon color="#d8e1f0" />
+          <div
+            className={`${styles.feature} ${styles.featureSilver}`}
+            onClick={onOpenAutopilot}
+            style={{ cursor: 'pointer', borderTopColor: 'rgba(0, 212, 255, 0.65)' }}
+          >
+            <div className={styles.featureIconWrap} style={{ background: 'rgba(0,212,255,0.14)', borderColor: 'rgba(0,212,255,0.36)' }}>
+              <FolderTreeIcon color="#5ce1ff" />
             </div>
             <div>
-              <strong>Relocalizador, USB Portable y CUE</strong>
-              <p>Repara rutas rotas buscando en tu disco, copia audios a USB y genera .cue, Setlist y CSV</p>
+              <strong style={{ color: '#8ceeff' }}>FZR Soulseek Autopilot Integrado →</strong>
+              <p>Búsqueda nativa FLAC / Hi-Res / 320kbps, presets anti-ban, Dry-Run, Pausa/Reanudar e informes JSON</p>
             </div>
           </div>
         </div>

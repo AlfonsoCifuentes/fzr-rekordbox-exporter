@@ -1,7 +1,7 @@
 {
   "name": "rekordbox-exporter",
-  "version": "1.5.0",
-  "description": "Export Rekordbox playlists to Spotify and Traktor",
+  "version": "2.0.0",
+  "description": "FZR Booth OS: Rekordbox, Traktor, Serato, VirtualDJ, Spotify & Soulseek Autopilot",
   "productName": "FZR Rekordbox Exporter",
   "main": "out/main/index.js",
   "scripts": {
@@ -39,7 +39,8 @@
   "dependencies": {
     "fast-xml-parser": "^4.4.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "slsk-client": "^2.0.2"
   },
   "build": {
     "appId": "com.fzr.rekordbox-exporter",

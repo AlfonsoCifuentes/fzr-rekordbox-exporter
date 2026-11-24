@@ -24,6 +24,7 @@ type Props = {
   selectedPlaylists: Playlist[]
   onPlaylistsMutated: (all: Playlist[], selected: Playlist[]) => void
   onSelectionChange: (playlists: Playlist[]) => void
+  onOpenAutopilot: () => void
   onContinue: () => void
   onBack: () => void
 }
@@ -92,6 +93,7 @@ export default function PlaylistsScreen({
   selectedPlaylists,
   onPlaylistsMutated,
   onSelectionChange,
+  onOpenAutopilot,
   onContinue,
   onBack
 }: Props): JSX.Element {
@@ -873,15 +875,26 @@ export default function PlaylistsScreen({
 
       <footer className={styles.footer}>
         <span className={styles.footerHint}>
-          Selecciona 2 playlists para fusionarlas o compararlas · Reordena pistas o escanea una carpeta para reparar rutas
+          Selecciona 2 playlists para fusionarlas o compararlas · Reordena pistas o envíalas al Soulseek Autopilot
         </span>
-        <button
-          className="btn-primary"
-          onClick={onContinue}
-          disabled={selectedPlaylists.length === 0}
-        >
-          Continuar a exportación {selectedPlaylists.length > 0 ? `(${selectedPlaylists.length})` : ''} →
-        </button>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            className="btn-secondary"
+            style={{ color: '#5ce1ff', borderColor: 'rgba(0, 212, 255, 0.38)' }}
+            onClick={onOpenAutopilot}
+            disabled={playlists.length === 0}
+          >
+            <span className="led-dot" style={{ background: '#00d4ff', boxShadow: '0 0 6px #00d4ff' }} />
+            Soulseek Autopilot
+          </button>
+          <button
+            className="btn-primary"
+            onClick={onContinue}
+            disabled={selectedPlaylists.length === 0}
+          >
+            Continuar a exportación {selectedPlaylists.length > 0 ? `(${selectedPlaylists.length})` : ''} →
+          </button>
+        </div>
       </footer>
     </div>
   )
