@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,36 +8,49 @@ const inter = Inter({
   display: "swap",
 });
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://fzr-rekordbox-exporter.pages.dev"),
-  title: "FZR Rekordbox Exporter — Export to Traktor & Spotify",
+  title: "FZR Rekordbox Exporter — Rekordbox ⇄ Traktor Pro ⇄ Spotify",
   description:
-    "Export your Rekordbox playlists and folders to Traktor Pro (NML v19 with cue points, BPM & Open Key) and Spotify (fuzzy matching & manual review). Free, local, open source Windows app.",
+    "Bidirectional DJ library hub. Convert Rekordbox XML/M3U8/TXT, Traktor NML v19 and Streaming CSV with Hot Cues, Camelot harmonic analysis, BPM curves and Spotify PKCE review. 100% local & open source.",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/app-icon.png", type: "image/png" }],
   },
   keywords: [
     "rekordbox export",
     "rekordbox to spotify",
     "rekordbox to traktor",
-    "dj playlist export",
+    "traktor to rekordbox",
+    "dj playlist converter",
     "rekordbox xml",
     "traktor nml",
-    "pioneer dj",
-    "native instruments",
+    "camelot harmonic mixing",
     "fzr",
   ],
   openGraph: {
-    title: "FZR Rekordbox Exporter — Export to Traktor & Spotify",
+    title: "FZR Rekordbox Exporter — Bidirectional DJ Library Hub",
     description:
-      "Convert Rekordbox XML, M3U8 & TXT playlists to native Traktor Pro NML v19 and Spotify playlists. 100% local & open source.",
+      "Convert playlists between Rekordbox, Traktor Pro & Spotify with Hot Cues, Camelot harmonic sorting & online browser converter. 100% local & open source.",
     type: "website",
     url: "https://fzr-rekordbox-exporter.pages.dev",
   },
   twitter: {
     card: "summary_large_image",
     title: "FZR Rekordbox Exporter",
-    description: "Export Rekordbox playlists to Traktor Pro & Spotify in one click.",
+    description: "Rekordbox ⇄ Traktor Pro ⇄ Spotify — 100% Local DJ Hub.",
   },
 };
 
@@ -47,7 +60,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full`}
+    >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

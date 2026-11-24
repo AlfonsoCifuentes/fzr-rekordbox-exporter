@@ -172,18 +172,21 @@ function appendHistory(entry: ExportHistoryEntry): void {
 // ---- Window ----------------------------------------------------------------
 
 function createWindow(): BrowserWindow {
+  const iconPath = join(__dirname, '../../build-resources/icon.png')
   const win = new BrowserWindow({
-    width: 1240,
-    height: 840,
-    minWidth: 920,
-    minHeight: 620,
+    width: 1280,
+    height: 860,
+    minWidth: 960,
+    minHeight: 640,
     title: 'FZR Rekordbox Exporter',
+    icon: existsSync(iconPath) ? iconPath : undefined,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     },
-    backgroundColor: '#0a0b0e'
+    backgroundColor: '#07080c'
   })
 
   // Open external URLs in the user's default system browser instead of a blank Electron window

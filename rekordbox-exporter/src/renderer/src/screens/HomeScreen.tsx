@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import type { ExportHistoryEntry } from '../../../core/common/types'
+import {
+  FzrEmblem,
+  MiniRgbWaveform,
+  DeckIcon,
+  SpotifyWavesIcon,
+  FolderTreeIcon,
+  WaveformPulseIcon
+} from '../components/StudioIcons'
 import styles from './HomeScreen.module.css'
 
 type Props = {
@@ -61,32 +69,59 @@ export default function HomeScreen({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Top Booth Header */}
       <div className={styles.topBar}>
-        <div className={styles.versionPill}>FZR v1.4.0 · 100% Local · Bidireccional</div>
+        <div className={styles.brandLeft}>
+          <FzrEmblem size={28} />
+          <span className={styles.brandName}>FZR</span>
+          <span className={styles.versionPill}>v1.4.0 · 100% Local</span>
+        </div>
+
+        <div className={styles.signalStrip}>
+          <span className={styles.signalNode} style={{ color: '#6cc2ff' }}>
+            <i style={{ background: '#0095ff', boxShadow: '0 0 8px #0095ff' }} />
+            REKORDBOX
+          </span>
+          <span className={styles.signalArrow}>⇄</span>
+          <span className={styles.signalNode} style={{ color: '#ffab5e' }}>
+            <i style={{ background: '#ff7a1a', boxShadow: '0 0 8px #ff7a1a' }} />
+            TRAKTOR PRO
+          </span>
+          <span className={styles.signalArrow}>→</span>
+          <span className={styles.signalNode} style={{ color: '#46ee82' }}>
+            <i style={{ background: '#1db954', boxShadow: '0 0 8px #1db954' }} />
+            SPOTIFY
+          </span>
+        </div>
+
         <div className={styles.topRight}>
           {spotifyUser && (
             <span className={styles.spotifyBadge}>
               <span className={styles.spotifyDot} />
-              Spotify: {spotifyUser}
+              {spotifyUser}
             </span>
           )}
           <button
             className="btn-ghost"
-            style={{ fontSize: 12, padding: '5px 12px' }}
+            style={{ fontSize: 12, padding: '5px 12px', borderRadius: 999 }}
             onClick={() => setShowHelp((v) => !v)}
           >
-            {showHelp ? 'Cerrar ayuda' : '? Cómo exportar'}
+            {showHelp ? 'Cerrar guía' : '? Guía rápida'}
           </button>
         </div>
       </div>
 
       <div className={styles.main}>
+        {/* Hero */}
         <div className={styles.logo}>
-          <div className={styles.logoIcon}>▶</div>
-          <h1 className={styles.title}>FZR Rekordbox Exporter</h1>
+          <h1 className={styles.title}>
+            <span className={styles.titleGrad}>FZR</span> Rekordbox Exporter
+          </h1>
           <p className={styles.subtitle}>
-            Hub bidireccional para DJs: convierte entre <strong>Rekordbox</strong>,{' '}
-            <strong>Traktor Pro</strong> y <strong>Spotify</strong> con cue points, análisis armónico Camelot y revisión inteligente
+            Estación bidireccional para cabinas DJ: convierte librerías entre{' '}
+            <strong style={{ color: '#6cc2ff' }}>Rekordbox</strong>,{' '}
+            <strong style={{ color: '#ffab5e' }}>Traktor Pro</strong> y{' '}
+            <strong style={{ color: '#46ee82' }}>Spotify</strong> con Hot Cues, curva BPM y flujo armónico Camelot.
           </p>
         </div>
 
@@ -105,6 +140,7 @@ export default function HomeScreen({
           </div>
         )}
 
+        {/* Jog-Wheel Studio Drop Deck */}
         <div
           className={`${styles.dropzone} ${dragging ? styles.dropzoneActive : ''}`}
           onClick={onOpenFile}
@@ -114,67 +150,87 @@ export default function HomeScreen({
             if (e.key === 'Enter' || e.key === ' ') onOpenFile()
           }}
         >
-          <div className={styles.dropIcon}>{dragging ? '📥' : '📂'}</div>
+          <div className={styles.platterWrap}>
+            <div className={styles.platterOuterRing} />
+            <FzrEmblem size={68} />
+          </div>
+
+          <MiniRgbWaveform bars={32} height={20} />
+
           <div className={styles.dropTitle}>
             {dragging
-              ? 'Suelta tu archivo de Rekordbox o Traktor aquí'
-              : 'Arrastra tu exportación de Rekordbox / Traktor o haz clic para seleccionar'}
+              ? 'Suelta tu librería o playlist en el deck'
+              : 'Arrastra tu exportación de Rekordbox, Traktor o Streaming aquí'}
           </div>
+
           <div className={styles.formats}>
-            <span className={styles.formatBadge}>.xml (Rekordbox)</span>
-            <span className={styles.formatBadge}>.nml (Traktor)</span>
-            <span className={styles.formatBadge}>.m3u8</span>
-            <span className={styles.formatBadge}>.m3u</span>
-            <span className={styles.formatBadge}>.txt</span>
-            <span className={styles.formatBadge}>.csv (Spotify/Streaming)</span>
+            <span className={styles.formatBadgeBlue}>.xml Rekordbox</span>
+            <span className={styles.formatBadgeAmber}>.nml Traktor</span>
+            <span className={styles.formatBadge}>.m3u8 / .m3u</span>
+            <span className={styles.formatBadge}>.txt UTF-16</span>
+            <span className={styles.formatBadgeGreen}>.csv Spotify</span>
           </div>
+
           <button
             className="btn-primary"
-            style={{ fontSize: 14, padding: '10px 24px', marginTop: 6 }}
+            style={{ fontSize: 14, padding: '11px 28px', marginTop: 4 }}
             onClick={(e) => {
               e.stopPropagation()
               onOpenFile()
             }}
           >
-            Importar librería o playlist
+            Cargar librería o playlist
           </button>
         </div>
 
+        {/* Studio Feature Cards */}
         <div className={styles.features}>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>🎛️</div>
+          <div className={`${styles.feature} ${styles.featureAmber}`}>
+            <div className={styles.featureIconWrap} style={{ background: 'rgba(255,122,26,0.14)', borderColor: 'rgba(255,122,26,0.32)' }}>
+              <DeckIcon color="#ff9947" />
+            </div>
             <div>
-              <strong>Traktor NML v19 + M3U8</strong>
-              <p>Exporta colecciones .nml válidas con BPM, tonalidad Open Key, cue points y rutas exactas</p>
+              <strong>Traktor NML v19 ⇄ Rekordbox XML</strong>
+              <p>Conversión bidireccional con Hot Cues, Loops, Open Key ↔ Camelot y rutas nativas</p>
             </div>
           </div>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>💚</div>
+
+          <div className={`${styles.feature} ${styles.featureGreen}`}>
+            <div className={styles.featureIconWrap} style={{ background: 'rgba(29,185,84,0.14)', borderColor: 'rgba(29,185,84,0.32)' }}>
+              <SpotifyWavesIcon color="#2ee06e" />
+            </div>
             <div>
-              <strong>Spotify Fuzzy + Revisión</strong>
-              <p>Matching inteligente multi-consulta con puntuación de confianza y revisión manual previa</p>
+              <strong>Spotify PKCE + Revisión Manual</strong>
+              <p>Matching fuzzy multi-consulta con puntuación 0–100 y corrección en vivo antes de publicar</p>
             </div>
           </div>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>📁</div>
+
+          <div className={`${styles.feature} ${styles.featureBlue}`}>
+            <div className={styles.featureIconWrap} style={{ background: 'rgba(0,149,255,0.14)', borderColor: 'rgba(0,149,255,0.32)' }}>
+              <WaveformPulseIcon color="#52b8ff" />
+            </div>
             <div>
-              <strong>Carpetas y Audio Portable</strong>
-              <p>Conserva carpetas anidadas de Rekordbox y opcionalmente copia los audios a destino</p>
+              <strong>Análisis Camelot, Curva BPM y Diff</strong>
+              <p>Auto-orden armónico, división por zonas BPM, fusión, comparador y limpiador de duplicados</p>
             </div>
           </div>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>📊</div>
+
+          <div className={`${styles.feature} ${styles.featureSilver}`}>
+            <div className={styles.featureIconWrap} style={{ background: 'rgba(232,237,247,0.1)', borderColor: 'rgba(232,237,247,0.24)' }}>
+              <FolderTreeIcon color="#d8e1f0" />
+            </div>
             <div>
-              <strong>Informes CSV &amp; JSON</strong>
-              <p>Registro por pista de rutas rotas, estado de Spotify y confianza de cada coincidencia</p>
+              <strong>Relocalizador, USB Portable y CUE</strong>
+              <p>Repara rutas rotas buscando en tu disco, copia audios a USB y genera .cue, Setlist y CSV</p>
             </div>
           </div>
         </div>
 
+        {/* Recent Export History */}
         {history.length > 0 && (
           <div className={styles.historyBox}>
             <div className={styles.historyHeader}>
-              <span>Exportaciones recientes</span>
+              <span>Sesiones recientes</span>
               <button
                 className="btn-ghost"
                 style={{ fontSize: 11, padding: '2px 8px' }}
@@ -198,7 +254,7 @@ export default function HomeScreen({
                     {item.outputDir && (
                       <button
                         className="btn-ghost"
-                        style={{ fontSize: 11, padding: '3px 8px' }}
+                        style={{ fontSize: 11, padding: '3px 9px' }}
                         onClick={() => window.electronAPI.openFolder(item.outputDir!)}
                       >
                         Carpeta
@@ -207,7 +263,7 @@ export default function HomeScreen({
                     {item.spotifyUrls[0] && (
                       <button
                         className="btn-ghost"
-                        style={{ fontSize: 11, padding: '3px 8px', color: 'var(--green)' }}
+                        style={{ fontSize: 11, padding: '3px 9px', color: 'var(--sp-green)' }}
                         onClick={() => window.electronAPI.openExternal(item.spotifyUrls[0])}
                       >
                         Spotify →
@@ -221,34 +277,37 @@ export default function HomeScreen({
         )}
       </div>
 
+      {/* Help Modal */}
       {showHelp && (
         <div className={styles.modalBackdrop} onClick={() => setShowHelp(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Guía rápida de exportación</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FzrEmblem size={24} />
+                <h3>Guía rápida de cabina</h3>
+              </div>
               <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setShowHelp(false)}>
                 ✕
               </button>
             </div>
             <div className={styles.modalBody}>
-              <h4>1. Exportar desde Rekordbox</h4>
+              <h4>1. Importar desde Rekordbox, Traktor o Streaming</h4>
               <ul>
-                <li><strong>XML completo (recomendado):</strong> Menú <em>File → Export Collection in rekordbox xml format</em>. Incluye carpetas, BPM, tonalidad y cue points.</li>
-                <li><strong>M3U8 o TXT:</strong> Clic derecho en una playlist → <em>Export Playlist</em> → elige <code>.m3u8</code> o <code>.txt</code> (compatible con UTF-16 de Rekordbox).</li>
+                <li><strong>Rekordbox XML (recomendado):</strong> <em>File → Export Collection in rekordbox xml format</em> (incluye carpetas, BPM, Key y Hot Cues).</li>
+                <li><strong>Traktor Pro NML:</strong> exporta tu playlist o colección como <code>.nml</code> y arrástrala directamente.</li>
+                <li><strong>M3U8, TXT o CSV:</strong> compatible con Rekordbox UTF-16 TXT, Exportify y Soundiiz.</li>
               </ul>
 
-              <h4>2. Importar en Traktor Pro</h4>
+              <h4>2. Importar en Traktor Pro o Rekordbox</h4>
               <ul>
-                <li>Abre Traktor → <em>File → Import → Import Another Collection / Import Playlist...</em></li>
-                <li>Selecciona el archivo <code>.nml</code> generado (o el <code>.m3u8</code> como alternativa universal).</li>
-                <li>Nunca modificamos tu <code>collection.nml</code> original.</li>
+                <li>En Traktor: <em>File → Import → Import Playlist...</em> y elige el <code>.nml</code> o <code>.m3u8</code>.</li>
+                <li>En Rekordbox: activa la vista <em>rekordbox xml</em> en Preferencias y carga el archivo <code>_rekordbox.xml</code>.</li>
               </ul>
 
-              <h4>3. Conectar Spotify (OAuth PKCE)</h4>
+              <h4>3. Conectar Spotify (OAuth PKCE sin secreto)</h4>
               <ul>
                 <li>Crea una app gratuita en <strong>developer.spotify.com/dashboard</strong>.</li>
-                <li>Añade exactamente <code>http://127.0.0.1:7823/callback</code> como Redirect URI.</li>
-                <li>Pega el <strong>Client ID</strong> en la pantalla de exportación e inicia sesión (sin Client Secret).</li>
+                <li>Añade exactamente <code>http://127.0.0.1:7823/callback</code> en Redirect URIs y pega tu Client ID en la pantalla de exportación.</li>
               </ul>
             </div>
           </div>

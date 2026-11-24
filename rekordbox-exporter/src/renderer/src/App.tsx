@@ -5,6 +5,7 @@ import type {
   ExportResult,
   SpotifyMatch
 } from '../../core/common/types'
+import { FzrEmblem } from './components/StudioIcons'
 import HomeScreen from './screens/HomeScreen'
 import ImportScreen from './screens/ImportScreen'
 import PlaylistsScreen from './screens/PlaylistsScreen'
@@ -29,12 +30,12 @@ export type AppState = {
   exportResults: ExportResult[]
 }
 
-const STEP_LABELS: Array<{ id: Screen; label: string }> = [
-  { id: 'import', label: '1. Archivo' },
-  { id: 'playlists', label: '2. Playlists' },
-  { id: 'export', label: '3. Opciones' },
-  { id: 'review', label: '4. Revisión Spotify' },
-  { id: 'results', label: '5. Resultados' }
+const STEP_LABELS: Array<{ id: Screen; num: string; label: string }> = [
+  { id: 'import', num: '01', label: 'Archivo' },
+  { id: 'playlists', num: '02', label: 'Playlists' },
+  { id: 'export', num: '03', label: 'Exportar' },
+  { id: 'review', num: '04', label: 'Revisión' },
+  { id: 'results', num: '05', label: 'Listo' }
 ]
 
 export default function App(): JSX.Element {
@@ -138,7 +139,7 @@ export default function App(): JSX.Element {
     try {
       await window.electronAPI.addHistory({
         exportedAt: new Date().toISOString(),
-        sourceFile: state.sourceFilePath?.split(/[\\/]/).pop() ?? 'Rekordbox',
+        sourceFile: state.sourceFilePath?.split(/[\\/]/).pop() ?? 'DJ Export',
         playlistCount: results.length,
         totalTracks,
         outputDir,
@@ -154,53 +155,111 @@ export default function App(): JSX.Element {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Unified FZR Booth Top Bar when inside workflow */}
       {screen !== 'home' && (
         <div
           style={{
+            position: 'relative',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            padding: '8px 16px',
-            background: '#0d0f14',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '10px 20px',
+            background: 'rgba(11, 14, 22, 0.94)',
             borderBottom: '1px solid var(--border)',
-            fontSize: 11
+            backdropFilter: 'blur(16px)'
           }}
         >
-          {STEP_LABELS.map((step, idx) => {
-            const isActive = step.id === screen
-            const isDone = idx < currentStepIdx
-            return (
-              <React.Fragment key={step.id}>
-                <span
-                  style={{
-                    padding: '3px 10px',
-                    borderRadius: 99,
-                    fontWeight: isActive ? 700 : 500,
-                    background: isActive
-                      ? 'rgba(244, 125, 32, 0.16)'
-                      : isDone
-                        ? 'rgba(29, 185, 84, 0.12)'
-                        : 'transparent',
-                    color: isActive
-                      ? 'var(--accent)'
-                      : isDone
-                        ? 'var(--green)'
-                        : 'var(--text-muted)',
-                    border: isActive
-                      ? '1px solid rgba(244, 125, 32, 0.4)'
-                      : '1px solid transparent'
-                  }}
-                >
-                  {isDone ? '✓ ' : ''}
-                  {step.label}
-                </span>
-                {idx < STEP_LABELS.length - 1 && (
-                  <span style={{ color: 'var(--border)' }}>›</span>
-                )}
-              </React.Fragment>
-            )
-          })}
+          {/* Left: Brand emblem */}
+          <button
+            onClick={() => go('home')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 9,
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              color: 'var(--text)'
+            }}
+            title="Volver al inicio"
+          >
+            <FzrEmblem size={26} />
+            <span style={{ fontWeight: 800, letterSpacing: '0.4px', fontSize: 13 }}>
+              FZR <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>DECK</span>
+            </span>
+          </button>
+
+          {/* Center: Hardware Transport Stepper */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+            {STEP_LABELS.map((step, idx) => {
+              const isActive = step.id === screen
+              const isDone = idx < currentStepIdx
+              return (
+                <React.Fragment key={step.id}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '4px 11px',
+                      borderRadius: 999,
+                      fontWeight: isActive ? 700 : 500,
+                      background: isActive
+                        ? 'linear-gradient(135deg, rgba(0,149,255,0.18), rgba(29,185,84,0.18))'
+                        : isDone
+                          ? 'rgba(29, 185, 84, 0.1)'
+                          : 'rgba(255,255,255,0.02)',
+                      color: isActive
+                        ? '#ffffff'
+                        : isDone
+                          ? '#46ee82'
+                          : 'var(--text-muted)',
+                      border: isActive
+                        ? '1px solid rgba(0, 149, 255, 0.45)'
+                        : isDone
+                          ? '1px solid rgba(29, 185, 84, 0.25)'
+                          : '1px solid transparent'
+                    }}
+                  >
+                    <span style={{ fontFamily: 'monospace', opacity: 0.75, fontSize: 10 }}>
+                      {isDone ? '✓' : step.num}
+                    </span>
+                    {step.label}
+                  </span>
+                  {idx < STEP_LABELS.length - 1 && (
+                    <span style={{ color: 'rgba(255,255,255,0.18)' }}>›</span>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </div>
+
+          {/* Right: Tri-platform LED indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rb-blue)', boxShadow: '0 0 8px var(--rb-blue)' }} />
+            <span>RB</span>
+            <span style={{ opacity: 0.35 }}>⇄</span>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tr-amber)', boxShadow: '0 0 8px var(--tr-amber)' }} />
+            <span>TR</span>
+            <span style={{ opacity: 0.35 }}>→</span>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--sp-green)', boxShadow: '0 0 8px var(--sp-green)' }} />
+            <span>SP</span>
+          </div>
+
+          {/* Tri-gradient hairline seam */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 1.5,
+              background:
+                'linear-gradient(90deg, transparent 0%, #0095ff 25%, #e8edf7 50%, #ff7a1a 68%, #1db954 88%, transparent 100%)',
+              opacity: 0.55
+            }}
+          />
         </div>
       )}
 

@@ -60,6 +60,7 @@
       "main": "out/main/index.js"
     },
     "win": {
+      "icon": "build-resources/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -78,11 +79,20 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "FZR Rekordbox Exporter"
+      "shortcutName": "FZR Rekordbox Exporter",
+      "installerIcon": "build-resources/icon.ico",
+      "uninstallerIcon": "build-resources/icon.ico",
+      "installerHeaderIcon": "build-resources/icon.ico",
+      "installerSidebar": "build-resources/installerSidebar.bmp",
+      "uninstallerSidebar": "build-resources/uninstallerSidebar.bmp",
+      "installerHeader": "build-resources/installerHeader.bmp",
+      "include": "build-resources/installer.nsh",
+      "runAfterFinish": true
     }
   }
 }

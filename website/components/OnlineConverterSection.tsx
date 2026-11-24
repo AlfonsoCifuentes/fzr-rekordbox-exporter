@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useLocale } from "./LocaleContext";
+import { FzrLogoMark, getCamelotBadgeStyle } from "./BrandIcons";
 import {
   type WebParseOutput,
   type WebPlaylist,
@@ -143,8 +144,10 @@ export default function OnlineConverterSection() {
               background: dragging ? "rgba(29,185,84,0.08)" : "rgba(22,25,33,0.7)",
             }}
           >
-            <div className="text-4xl mb-4">🎛️</div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+            <div className="mx-auto mb-5 w-16 h-16 flex items-center justify-center">
+              <FzrLogoMark size={64} />
+            </div>
+            <h3 className="text-lg font-bold mb-2 font-display" style={{ color: "var(--text-primary)" }}>
               {locale === "es"
                 ? "Arrastra aquí un archivo .xml, .nml, .m3u8, .txt o .csv"
                 : "Drop a Rekordbox .xml, Traktor .nml, .m3u8, .txt or .csv file here"}
@@ -454,7 +457,18 @@ export default function OnlineConverterSection() {
                           <td className="py-2 pr-3 font-mono text-white/70">
                             {t.bpm ? Math.round(t.bpm) : "—"}
                           </td>
-                          <td className="py-2 pr-3 font-mono text-white/80">{cam}</td>
+                          <td className="py-2 pr-3 font-mono">
+                            {cam !== "—" ? (
+                              <span
+                                className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                style={getCamelotBadgeStyle(cam)}
+                              >
+                                {cam}
+                              </span>
+                            ) : (
+                              <span className="text-white/30">—</span>
+                            )}
+                          </td>
                           <td className="py-2 text-right">
                             {tr && tr.rating !== "unknown" ? (
                               <span

@@ -14,6 +14,7 @@ import {
   type PlaylistDiff
 } from '../../../core/analytics/playlistTools'
 import { remapPlaylistPaths } from '../../../core/export/extraExporters'
+import { getCamelotPillStyle } from '../components/StudioIcons'
 import styles from './PlaylistsScreen.module.css'
 
 type Props = {
@@ -563,12 +564,20 @@ export default function PlaylistsScreen({
                         <div className={styles.trackMain}>
                           <div className={styles.trackTitle}>{track.name}</div>
                           <div className={styles.trackArtist}>
-                            {track.artist}
-                            {track.bpm ? ` · ${Math.round(track.bpm)} BPM` : ''}
-                            {cam ? ` · ${cam}` : ''}
-                            {track.cuePoints && track.cuePoints.length > 0
-                              ? ` · ${track.cuePoints.length} cues`
-                              : ''}
+                            <span>{track.artist}</span>
+                            {track.bpm ? (
+                              <span style={{ fontFamily: 'monospace', color: '#9ab4d6' }}>
+                                {Math.round(track.bpm)} BPM
+                              </span>
+                            ) : null}
+                            {cam ? (
+                              <span style={getCamelotPillStyle(cam)}>{cam}</span>
+                            ) : null}
+                            {track.cuePoints && track.cuePoints.length > 0 ? (
+                              <span style={{ color: '#ffab5e', fontFamily: 'monospace' }}>
+                                {track.cuePoints.length} cues
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                         {transition && transition.rating !== 'unknown' && (

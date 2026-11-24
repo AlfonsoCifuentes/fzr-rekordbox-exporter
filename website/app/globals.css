@@ -1,68 +1,111 @@
 @import "tailwindcss";
 
-/* FZR Design Tokens */
+/* FZR Booth OS Design Tokens — Rekordbox + Traktor Pro + Spotify */
 :root {
-  --bg-base:        #0a0b0e;
-  --bg-elevated:    #111318;
-  --bg-card:        #161921;
-  --bg-card-hover:  #1c2029;
-  --rekordbox-blue: #005bff;
-  --traktor-white:  #e8eaf0;
+  --bg-base:        #06070b;
+  --bg-elevated:    #0b0e16;
+  --bg-card:        #121622;
+  --bg-card-hover:  #181e2f;
+
+  --rekordbox-blue: #0095ff;
+  --traktor-amber:  #ff7a1a;
+  --traktor-white:  #e8edf7;
   --spotify-green:  #1db954;
-  --text-primary:   #f0f2f8;
-  --text-muted:     #7e8599;
-  --text-subtle:    #4a5168;
-  --glow-blue:      rgba(0, 91, 255, 0.35);
-  --glow-green:     rgba(29, 185, 84, 0.35);
+  --spotify-bright: #22d962;
+
+  --text-primary:   #f2f5fc;
+  --text-muted:     #8b95ad;
+  --text-subtle:    #566078;
+
+  --glow-blue:      rgba(0, 149, 255, 0.34);
+  --glow-amber:     rgba(255, 122, 26, 0.3);
+  --glow-green:     rgba(29, 185, 84, 0.36);
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+
 body {
   background: var(--bg-base);
   color: var(--text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--text-subtle); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px var(--glow-green); }
-  50%       { box-shadow: 0 0 45px var(--glow-green), 0 0 90px var(--glow-green); }
+  0%, 100% { box-shadow: 0 0 22px var(--glow-green); }
+  50%      { box-shadow: 0 0 42px var(--glow-green), 0 0 80px rgba(29,185,84,0.18); }
 }
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-12px); }
+  50%      { transform: translateY(-10px); }
 }
 
-.animate-fade-up  { animation: fadeUp 0.7s ease forwards; }
-.animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
-.animate-float    { animation: float 4s ease-in-out infinite; }
+@keyframes eqPulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.85; }
+  50%      { transform: scaleY(0.62); opacity: 0.55; }
+}
+
+.animate-fade-up    { animation: fadeUp 0.65s ease forwards; }
+.animate-pulse-glow { animation: pulseGlow 2.6s ease-in-out infinite; }
+.animate-float      { animation: float 4.5s ease-in-out infinite; }
+.animate-eq         { animation: eqPulse 2.4s ease-in-out infinite; transform-origin: center; }
 
 .glass {
-  background: rgba(22, 25, 33, 0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(20, 25, 38, 0.78) 0%, rgba(12, 15, 24, 0.86) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
+
+.deck-console {
+  background: linear-gradient(180deg, rgba(16, 20, 32, 0.92) 0%, rgba(8, 10, 16, 0.96) 100%);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.65),
+    0 0 50px rgba(0, 149, 255, 0.08),
+    0 0 50px rgba(29, 185, 84, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
 .gradient-text {
-  background: linear-gradient(90deg, var(--rekordbox-blue) 0%, var(--traktor-white) 50%, var(--spotify-green) 100%);
+  background: linear-gradient(92deg, #0095ff 0%, #64d2ff 28%, #f0f3fa 52%, #ff9947 72%, #1db954 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+.tri-divider {
+  background: linear-gradient(90deg, transparent 0%, #0095ff 22%, #e8edf7 48%, #ff7a1a 68%, #1db954 88%, transparent 100%);
+}
+
 .grid-bg {
   background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 60px 60px;
+    radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 32px 32px, 64px 64px, 64px 64px;
 }
